@@ -44,39 +44,57 @@ export const App: React.FC = () => {
 
   const activeThread = threads.find((t) => t.id === activeThreadId) ?? null;
 
-  const sendPrompt = async (promptText: string, attached: Attachment[]) => {
+  const sendPrompt = async (
+    promptText: string,
+    attached: Attachment[],
+    retryContext?: { threadId: string; baseMessages: ChatMessage[] }
+  ) => {
     const trimmed = promptText.trim();
     if (!trimmed && attached.length === 0) return;
 
+    const now = Date.now();
     const userMsg: ChatMessage = {
-      id: `msg_${Date.now()}_u`,
+      id: `msg_${now}_u`,
       role: 'user',
       content: trimmed,
       attachments: attached.length > 0 ? attached : undefined,
-      createdAt: Date.now(),
+      createdAt: now,
     };
 
-    const assistantMsgId = `msg_${Date.now()}_a`;
+    const assistantMsgId = `msg_${now}_a`;
     const assistantMsg: ChatMessage = {
       id: assistantMsgId,
       role: 'assistant',
       content: '',
       reasoning: '',
       modelId: selectedModel,
-      createdAt: Date.now(),
+      createdAt: now,
     };
 
-    let targetThreadId = activeThreadId;
+    let targetThreadId = retryContext?.threadId ?? activeThreadId;
     let historyMessages: ChatMessage[] = [];
 
-    if (!targetThreadId || !activeThread) {
-      targetThreadId = `thr_${Date.now()}`;
+    if (retryContext) {
+      historyMessages = [...retryContext.baseMessages, userMsg];
+      setThreads((prev) =>
+        prev.map((t) =>
+          t.id === retryContext.threadId
+            ? {
+                ...t,
+                messages: [...retryContext.baseMessages, userMsg, assistantMsg],
+                updatedAt: Date.now(),
+              }
+            : t
+        )
+      );
+    } else if (!targetThreadId || !activeThread) {
+      targetThreadId = `thr_${now}`;
       const newThread: ChatThread = {
         id: targetThreadId,
         title: (trimmed || 'Attachment prompt').slice(0, 42),
         messages: [userMsg, assistantMsg],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: now,
+        updatedAt: now,
       };
       historyMessages = [userMsg];
       setThreads((prev) => [newThread, ...prev]);
@@ -92,8 +110,10 @@ export const App: React.FC = () => {
       );
     }
 
-    setInput('');
-    setAttachments([]);
+    if (!retryContext) {
+      setInput('');
+      setAttachments([]);
+    }
     setIsStreaming(true);
 
     const controller = new AbortController();
@@ -174,6 +194,28 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleRetryMessage = (assistantMessageId: string) => {
+    if (!activeThread || isStreaming) return;
+    const msgIndex = activeThread.messages.findIndex((m) => m.id === assistantMessageId);
+    if (msgIndex <= 0) return;
+
+    let userMsgIndex = -1;
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      if (activeThread.messages[i].role === 'user') {
+        userMsgIndex = i;
+        break;
+      }
+    }
+    if (userMsgIndex === -1) return;
+
+    const userMsg = activeThread.messages[userMsgIndex];
+    const baseMessages = activeThread.messages.slice(0, userMsgIndex);
+    void sendPrompt(userMsg.content, userMsg.attachments ?? [], {
+      threadId: activeThread.id,
+      baseMessages,
+    });
+  };
+
   const composerElement = (
     <AntigravityComposer
       value={input}
@@ -228,6 +270,7 @@ export const App: React.FC = () => {
                 <MessageItem
                   key={msg.id}
                   message={msg}
+                  onRetry={msg.role === 'assistant' ? () => handleRetryMessage(msg.id) : undefined}
                   onOpenSettings={() => setSettingsOpen(true)}
                 />
               ))}

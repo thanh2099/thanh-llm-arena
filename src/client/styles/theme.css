@@ -753,6 +753,47 @@ button {
   margin: 12px 0;
 }
 
+.code-block-wrap {
+  margin: 12px 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-canvas);
+  overflow: hidden;
+}
+
+.code-block-wrap pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.code-copy-btn {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  background: var(--bg-canvas);
+}
+
+.code-copy-btn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
 .turn-markdown-prose code {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -837,6 +878,27 @@ button {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+.modal-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.provider-status-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.provider-status-badge.status-ok {
+  color: var(--signal-ok);
+}
+
+.provider-status-badge.status-missing {
+  color: var(--signal-warn);
 }
 
 .modal-field input {

@@ -1,6 +1,6 @@
 // src/client/components/MessageItem.tsx
-import React, { useState } from 'react';
-import { marked } from 'marked';
+import React, { useMemo, useState } from 'react';
+import { Marked } from 'marked';
 import type { ChatMessage } from '../../shared/types';
 
 export interface MessageItemProps {
@@ -9,8 +9,37 @@ export interface MessageItemProps {
   onOpenSettings?: () => void;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const customMarked = new Marked({
+  renderer: {
+    code({ text, lang }: { text: string; lang?: string }) {
+      const language = (lang || 'text').trim().split(/\s+/)[0] || 'text';
+      const encoded = encodeURIComponent(text);
+      const escaped = escapeHtml(text);
+      return `<div class="code-block-wrap"><div class="code-block-header"><span class="code-block-lang">[${escapeHtml(
+        language.toUpperCase()
+      )}]</span><button type="button" class="code-copy-btn" data-code="${encoded}">[COPY]</button></div><pre><code class="language-${escapeHtml(
+        language
+      )}">${escaped}</code></pre></div>`;
+    },
+  },
+});
+
 export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry, onOpenSettings }) => {
   const [reasoningOpen, setReasoningOpen] = useState(true);
+
+  const html = useMemo(() => {
+    if (message.role === 'user') return '';
+    return customMarked.parse(message.content || '', { async: false }) as string;
+  }, [message.role, message.content]);
 
   if (message.role === 'user') {
     return (
@@ -36,7 +65,20 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry, onOp
     );
   }
 
-  const html = marked.parse(message.content || '', { async: false }) as string;
+  const handleProseClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('.code-copy-btn') as HTMLButtonElement | null;
+    if (!btn) return;
+    const encoded = btn.getAttribute('data-code');
+    if (encoded !== null) {
+      const decoded = decodeURIComponent(encoded);
+      navigator.clipboard?.writeText(decoded).catch(() => {});
+      btn.textContent = '[COPIED]';
+      setTimeout(() => {
+        btn.textContent = '[COPY]';
+      }, 1500);
+    }
+  };
 
   return (
     <div className="turn-row turn-assistant">
@@ -93,6 +135,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry, onOp
       ) : (
         <div
           className="turn-markdown-prose"
+          onClick={handleProseClick}
           dangerouslySetInnerHTML={{ __html: html || '<span class="streaming-cursor">▋</span>' }}
         />
       )}
