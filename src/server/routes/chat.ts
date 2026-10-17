@@ -62,6 +62,7 @@ export async function executeChatWithFailover(
       emit({ type: 'done', latencyMs: Date.now() - startTime });
       return;
     } catch (err) {
+      if (signal?.aborted) return;
       const msg = err instanceof Error ? err.message : String(err);
       lastError = msg;
       const nextSpec = candidates[i + 1];
@@ -70,13 +71,23 @@ export async function executeChatWithFailover(
           type: 'failover',
           from: spec.provider,
           to: nextSpec.provider,
-          reason: msg.replace(/^HTTP\s+/i, '').slice(0, 90),
+          reason: formatFailoverReason(msg),
         });
       } else {
         emit({ type: 'error', message: lastError, provider: spec.provider });
       }
     }
   }
+}
+
+function formatFailoverReason(rawMsg: string): string {
+  const statusMatch = rawMsg.match(/^HTTP\s+(\d{3})/i);
+  const status = statusMatch ? statusMatch[1] : '';
+  if (/api_key_expired/i.test(rawMsg)) return `${status ? status + ' ' : ''}API_KEY_EXPIRED`;
+  if (/high demand|UNAVAILABLE/i.test(rawMsg)) return `${status ? status + ' ' : ''}HIGH_DEMAND`;
+  if (/rate.?limit|429/i.test(rawMsg)) return `${status ? status + ' ' : ''}RATE_LIMITED`;
+  const clean = rawMsg.replace(/^HTTP\s+/i, '').replace(/[\r\n{}"]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return clean.slice(0, 48);
 }
 
 export function createChatRouter(getEnvKeys: () => Required<ApiKeysOverride>): Router {
@@ -103,7 +114,11 @@ export function createChatRouter(getEnvKeys: () => Required<ApiKeysOverride>): R
     res.setHeader('Connection', 'keep-alive');
 
     const controller = new AbortController();
-    req.on('close', () => controller.abort());
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        controller.abort();
+      }
+    });
 
     const emit = (evt: SSEEvent) => {
       res.write(`data: ${JSON.stringify(evt)}\n\n`);
