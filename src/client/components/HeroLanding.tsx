@@ -63,6 +63,17 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ composerSlot, onSelect
   return (
     <div className="arena-hero-container">
       <div className="arena-hero-inner">
+        <div className="hero-banner-wrap">
+          <img src="/banner.jpg" alt="Thanh'S LLM Arena" className="hero-banner-img" />
+          <div className="hero-banner-bar">
+            <div className="hero-banner-tag">
+              <span className="connecting-dot">●</span>
+              <span>THANH'S LLM ARENA</span>
+            </div>
+            <span>DIRECT MULTI-MODEL CHAT // OPENCODE · GEMINI · OPENROUTER</span>
+          </div>
+        </div>
+
         <h1 className="arena-hero-title">What would you like to do?</h1>
         {composerSlot}
         <div className="arena-starter-section">

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" width="320" height="64">
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#121215" stroke="#27272a" stroke-width="1.5"/>
+  <path d="M18 20h28v6H35v22h-6V26H18v-6z" fill="#fafafa"/>
+  <circle cx="44" cy="20" r="3" fill="#10b981"/>
+  <text x="76" y="32" fill="#fafafa" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="16" font-weight="700" letter-spacing="0.02em">Thanh'S LLM Arena</text>
+  <text x="76" y="48" fill="#71717a" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" letter-spacing="0.1em">MULTI-MODEL // DIRECT</text>
+</svg>

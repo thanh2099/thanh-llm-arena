@@ -44,7 +44,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="sidebar-rail">
       <div className="sidebar-header">
-        <span className="sidebar-brand">ARENA // DIRECT</span>
+        <div className="sidebar-brand-group">
+          <img src="/favicon.svg" alt="Logo" className="sidebar-brand-icon" />
+          <span className="sidebar-brand">Thanh'S LLM Arena</span>
+        </div>
         <button type="button" className="ag-pill-btn" onClick={onToggle} title="Collapse sidebar">
           «
         </button>
