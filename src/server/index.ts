@@ -17,6 +17,6 @@ app.use(
 );
 
 const port = Number(process.env.PORT ?? 3001);
-app.listen(port, () => {
-  console.log(`[ThanhLLM Proxy] Listening on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`[ThanhLLM Proxy] Listening on http://0.0.0.0:${port}`);
 });
