@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Master System Prompt & Specification // Thanh'S LLM Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html[data-theme="dark"] {
+      --bg-page: #09090b;
+      --bg-surface: #121215;
+      --bg-elevated: #18181c;
+      --bg-code: #050507;
+      --border-subtle: #27272a;
+      --border-strong: #52525b;
+      --border-focus: #e4e4e7;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.12);
+      --signal-warn: #f59e0b;
+      --signal-danger: #ef4444;
+      --badge-bg: #202026;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    html[data-theme="light"] {
+      --bg-page: #f8f9fa;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f1f3f5;
+      --bg-code: #eaedf0;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --border-focus: #0f172a;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #059669;
+      --accent-dim: rgba(5, 150, 105, 0.12);
+      --signal-warn: #d97706;
+      --signal-danger: #dc2626;
+      --badge-bg: #e2e8f0;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Fixed Top Action Bar */
+    .top-action-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .bar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .bar-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .bar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    button.btn-accent {
+      background: var(--text-primary);
+      color: var(--bg-page);
+      border-color: var(--text-primary);
+    }
+
+    button.btn-accent:hover {
+      opacity: 0.9;
+    }
+
+    /* Main Container */
+    .doc-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Header */
+    .doc-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 24px;
+    }
+
+    .doc-title {
+      font-family: var(--font-serif);
+      font-size: 42px;
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .doc-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Section Cards */
+    .spec-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .spec-section h2 {
+      font-family: var(--font-sans);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+    }
+
+    .spec-section h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0 10px;
+      color: var(--text-primary);
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    /* Clean Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      word-break: break-word;
+    }
+
+    th {
+      background: var(--bg-elevated);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Code Blocks & Wrapped Text Box */
+    .code-box {
+      background: var(--bg-code);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin: 14px 0;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      white-space: pre-wrap;       /* Guaranteed text wrapping - NO horizontal scroll */
+      word-wrap: break-word;       /* Wrap long strings */
+      overflow-wrap: break-word;   /* Prevent overflow */
+    }
+
+    .prompt-highlight {
+      background: var(--bg-elevated);
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      padding: 24px;
+      margin: 24px 0;
+      position: relative;
+    }
+
+    .prompt-highlight-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .prompt-badge {
+      background: var(--accent);
+      color: #09090b;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    .raw-prompt-text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      white-space: pre-wrap;       /* Strictly wrapped! */
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    /* Lists */
+    ol, ul {
+      margin: 12px 0 16px;
+      padding-left: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    li {
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    li::marker {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text-primary);
+      color: var(--bg-page);
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(10px);
+      z-index: 1000;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .top-action-bar {
+        padding: 10px 14px;
+      }
+      .doc-container {
+        padding: 24px 14px 60px;
+      }
+      .doc-title {
+        font-size: 30px;
+      }
+      .spec-section {
+        padding: 18px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Bar -->
+  <div class="top-action-bar">
+    <div class="bar-brand">
+      <span>Thanh'S LLM Arena</span>
+      <span class="bar-badge">REPLICATION MASTER PROMPT</span>
+    </div>
+    <div class="bar-controls">
+      <button type="button" id="themeToggleBtn" onclick="toggleTheme()">
+        <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+      </button>
+      <button type="button" class="btn-accent" onclick="copyMasterPrompt()">
+        📋 Copy Full Prompt
+      </button>
+    </div>
+  </div>
+
+  <div class="doc-container">
+
+    <!-- Document Header -->
+    <header class="doc-header">
+      <h1 class="doc-title">Master System Prompt & Implementation Blueprint</h1>
+      <p class="doc-subtitle">
+        A comprehensive, multi-layered specification designed for high-capability LLMs (Claude 3.7 Sonnet, GPT-4o, Gemini 2.5 Pro) to reproduce <strong>Thanh'S LLM Arena</strong> from scratch. Every design token, layout dimension, multi-protocol streaming adapter, passkey security rule, and dual-cloud deployment step is rigorously documented.
+      </p>
+    </header>
+
+    <!-- Master Prompt Showcase Card -->
+    <div class="prompt-highlight">
+      <div class="prompt-highlight-header">
+        <span class="prompt-badge">READY-TO-COPY LLM PROMPT</span>
+        <button type="button" onclick="copyMasterPrompt()">📋 Copy Prompt</button>
+      </div>
+      <div class="raw-prompt-text" id="masterPromptContent">You are an elite principal full-stack engineer and design technologist. Your task is to build a complete, production-ready, dark-first AI model evaluation platform called "Thanh'S LLM Arena" (a fusion of Arena.ai's direct chat evaluation layout and Google Antigravity's Technical Broadsheet design system).
+
+The application must be completely implemented with zero placeholder comments, zero omitted switch cases, full TypeScript type safety, and real-time Server-Sent Events (SSE) streaming with zero-drop provider failover across 7 models and 3 backend providers.
+
+### 1. CORE ARCHITECTURE & STACK
+- Frontend: React 19 + TypeScript 5.8 + Vite 6 + Vanilla CSS (No Tailwind, strict handcrafted semantic tokens).
+- Backend: Express 5 + Node.js (native fetch, TextDecoder stream parser, bound to 0.0.0.0).
+- Deployment: Dual-cloud architecture:
+  * Backend: Hosted on Render.com Web Service (handling SSE streams, CORS with wildcards, and secret API keys).
+  * Frontend: Hosted on Netlify CDN with automated GitHub CI/CD, single-page app fallback, and /api/* proxy redirects.
+- Client Discovery: src/client/lib/apiConfig.ts automatically points to the live Render backend when hostname is not localhost, and uses relative /api locally.
+
+### 2. DESIGN SYSTEM: "TECHNICAL BROADSHEET DARK"
+Adhere strictly to an editorial, typography-driven, dark aesthetic inspired by technical broadsheets:
+- Palette & Tokens:
+  * --bg-canvas: #09090b (deep matte obsidian canvas)
+  * --bg-surface: #121215 (card and container surface)
+  * --bg-elevated: #18181c (hover, dropdowns, code blocks)
+  * --border-subtle: #27272a (1px crisp hairline dividers)
+  * --border-strong: #52525b (active borders, focus rings)
+  * --border-focus: #e4e4e7 (high contrast active outlines)
+  * --text-primary: #fafafa (crisp display text)
+  * --text-secondary: #a1a1aa (supporting body text)
+  * --text-muted: #71717a (telemetry and timestamps)
+  * --signal-ok: #10b981 (live emerald telemetry dots)
+  * --signal-warn: #f59e0b (failover and retry warning badges)
+  * --signal-danger: #ef4444 (stream error notifications)
+- Typography:
+  * Display Serifs: "Instrument Serif", Georgia, serif (used exclusively for hero questions, 34px-42px).
+  * Body Sans: "Plus Jakarta Sans", sans-serif (13.5px body copy, line-height: 1.65).
+  * Tabular Mono: "JetBrains Mono", monospace (10.5px-12px, for models, tokens, latency, badges, and headers).
+- Geometry Rules:
+  * ZERO drop-shadows or blurry glow effects on cards.
+  * Border radii strictly 4px (buttons, chips, inputs) and 6px (cards, composer, modals).
+  * Hairline 1px borders everywhere.
+
+### 3. LAYOUT SPECIFICATIONS & DIMENSIONS
+- App Shell:
+  * Width: 100vw, Height: 100vh / 100dvh (dynamic mobile viewport unit).
+  * Overflow: hidden, display: flex.
+- Collapsible Left Sidebar:
+  * Desktop Expanded: width 260px, min-width 260px.
+  * Desktop Collapsed: width 48px, min-width 48px, showing vertical icon rail (☰ expand, + new).
+  * Mobile (<= 768px): Defaults to CLOSED. Slides in as an off-canvas drawer (position: fixed, left: 0, top: 0, bottom: 0, width: 280px, max-width: 85vw, z-index: 200, shadow: 8px 0 32px rgba(0,0,0,0.85)) with a dark backdrop blur overlay. Closes automatically on navigation.
+  * Contents: Monogram logo + "Thanh'S LLM Arena", "+ NEW THREAD" button, scrollable thread list (with inline rename input and delete x), bottom "● API KEYS & PROVIDERS [LOCKED/UNLOCKED]" button.
+- Fixed Top Company Banner (.workspace-top-banner):
+  * Position: Fixed at the very top of .workspace-main (first child), permanently visible on BOTH hero landing and active threads.
+  * Height: 56px (50px on mobile <= 768px).
+  * Left Cluster: Mobile hamburger button (☰), "● LIVE ARENA" emerald badge, "NET: OPENCODE · GEMINI · OPENROUTER".
+  * Center Cluster (Top Middle): Brand monogram [T], bold "Thanh'S LLM Arena", subtitle "ENTERPRISE MULTI-MODEL EVALUATION // DIRECT". Clickable to open admin modal.
+  * Right Cluster: "MODELS: 6 ACTIVE + AUTO" pill, and "🔒 ADMIN" / "● SETTINGS" button.
+- Hero Landing Page:
+  * Container: max-width min(94vw, 1400px), flex-column, centered.
+  * Title: "What would you like to do?" (Instrument Serif).
+  * Composer slot (full width).
+  * Starter Cards: 2x3 grid on desktop (repeat(3, 1fr)), single column on mobile (1fr). 6 cards: Create a landing page, Build a dashboard, Make a game, Design to Code, Build a fullstack app, Launch a storefront.
+- Active Thread & Message Turns:
+  * Thread Scroll Region: max-width min(94vw, 1500px), margin: 0 auto, padding: 14px 20px (12px 10px on mobile).
+  * Turn Cards (.turn-row): padding 18px 24px (14px 14px on mobile), border: 1px solid var(--border-subtle), border-radius: 6px.
+  * Assistant Turn Header: [Model Name] [Provider] [Latency ms] + [REROUTED: from -> to (reason)] badge on failover.
+  * Reasoning Trace Drawer (.reasoning-block): Collapsible "▸ THINKING TRACE (xxx chars)", monospace body displaying reasoning tokens.
+  * Markdown Prose: 13.5px font, line-height: 1.65.
+  * Ordered & Unordered Lists: STRICT padding-left: 28px (20px mobile), gap: 7px, margin: 10px 0 16px. Markers (1., 2., ... 10.) must NEVER hang outside container borders.
+  * Dividers (<hr>): margin: 18px 0 to prevent touching text.
+  * Code Blocks: Syntax-styled header with language badge and "Copy" button.
+- Docked Antigravity Composer (Bottom):
+  * Multi-row dark composer box pinned at bottom:
+    1. Attachment preview strip (thumbnails with x delete button). Supports file upload dialog, drag-and-drop, and clipboard image pasting.
+    2. Textarea with placeholder "Ask anything...", auto-expanding up to 260px, Enter to send, Shift+Enter for newline.
+    3. Toolbar: + attachment button, ⚔ DIRECT mode pill, ⚡ Model Selector dropdown with provider routing override chips (Auto, OpenCode Go, OpenRouter, Gemini), and → send / ■ STOP button.
+
+### 4. MODEL CATALOG & MULTI-PROTOCOL PARSERS
+Support 7 model options routed across 3 providers:
+1. "auto": Intelligent heuristic router (routes coding/system queries to deepseek, creative to gemini, concise to glm).
+2. "beam-free": Primary OpenCode Go (openai protocol, beam-free), Fallback OpenRouter (reflection/beam-1.0-501b-a23b).
+3. "deepseek-v4.1-flash": Primary OpenCode Go (openai protocol, deepseek-v4.1-flash), Fallback OpenRouter (deepseek/deepseek-v4.1-flash).
+4. "glm-5.3-flash": Primary OpenCode Go (openai protocol, glm-5.3-flash), Fallback OpenRouter (z-ai/glm-5.3-flash).
+5. "space-bunny": Primary OpenCode Go (openai protocol, space-bunny), Fallback OpenRouter (deepseek/deepseek-v4.1-flash).
+6. "gemini-3.8-flash": Primary Gemini (gemini protocol, gemini-3.8-flash), Fallback OpenRouter (google/gemini-3.8-flash).
+7. "qwen3.8-flash": Primary OpenCode Go (anthropic protocol, qwen3.8-flash), Fallback OpenRouter (qwen/qwen3.8-flash).
+
+Multi-Protocol Parsers:
+- parseOpenAISSEData: Extracts delta.reasoning_content (as reasoning) and delta.content (as text).
+- parseAnthropicSSEData: Extracts content_block_delta with delta.type == 'thinking_delta' (as reasoning) and 'text_delta' (as text).
+- parseGeminiSSEData: Extracts candidates[0].content.parts[] where part.thought == true (as reasoning) and normal text parts (as text).
+
+Failover Engine:
+- If primary provider fails (HTTP 401, 429, 500, stream timeout, or empty body), immediately emits an SSE event:
+  { type: "failover", from: "opencode-go", to: "openrouter", reason: "401 API_KEY_EXPIRED" }
+- Automatically cascades to next candidate in line without crashing or dropping user message.
+
+### 5. SECURITY & PASSKEY AUTHENTICATION
+- Passkey: "thanh2099"
+- Settings access is locked by default.
+- Entering "thanh2099" unlocks the SettingsModal and grants a session stored in sessionStorage ("thanh_admin_auth_v1").
+- GET /api/providers/status on the backend requires header x-admin-passkey: "thanh2099". Returns 401 Unauthorized if missing.
+- Allows user to override API keys in browser localStorage or rely on backend environment variables.
+- Keyboard shortcut: Ctrl+Shift+S (or Cmd+Shift+S) immediately opens the Settings dialog.
+
+### 6. DEPLOYMENT & PRODUCTION SPECS
+- Render Backend:
+  * Command: npm install, Start: npm start (runs tsx src/server/index.ts).
+  * Port: Binds to 0.0.0.0 and process.env.PORT.
+  * Wildcard CORS: app.use(cors()) allows requests from Netlify domain.
+  * Secrets: Sets OPENCODE_GO_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY in Render environment variables.
+- Netlify Frontend:
+  * netlify.toml:
+    [build]
+      command = "npm run build"
+      publish = "dist"
+    [[redirects]]
+      from = "/api/*"
+      to = "https://thanh-llm-arena.onrender.com/api/:splat"
+      status = 200
+      force = true
+    [[redirects]]
+      from = "/*"
+      to = "/index.html"
+      status = 200
+  * public/_redirects: Mirrored inside the publish directory so Netlify Drop (manual drag-and-drop) works identically to GitHub CI/CD.</div>
+    </div>
+
+    <!-- Section 1: Visual Design Tokens -->
+    <section class="spec-section">
+      <h2>1. Visual Design System & Design Tokens</h2>
+      <p>
+        The visual identity is titled <strong>Technical Broadsheet Dark</strong>. It emphasizes typographic hierarchy, hairline dividers, dark matte backgrounds, and zero decorative bloat.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Token Name</th>
+              <th>Hex / Value</th>
+              <th>Usage & Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--bg-canvas</code></td>
+              <td><code>#09090b</code></td>
+              <td>Deep matte obsidian root canvas and app-shell background.</td>
+            </tr>
+            <tr>
+              <td><code>--bg-surface</code></td>
+              <td><code>#121215</code></td>
+              <td>Elevated cards, sidebar rail, top company banner, composer box.</td>
+            </tr>
+            <tr>
+              <td><code>--bg-elevated</code></td>
+              <td><code>#18181c</code></td>
+              <td>Hover states, model selector dropdown, code block headers.</td>
+            </tr>
+            <tr>
+              <td><code>--border-subtle</code></td>
+              <td><code>#27272a</code></td>
+              <td>Hairline 1px borders between panels, turn rows, and list dividers.</td>
+            </tr>
+            <tr>
+              <td><code>--border-strong</code></td>
+              <td><code>#52525b</code></td>
+              <td>Active borders, hover borders, composer default border.</td>
+            </tr>
+            <tr>
+              <td><code>--border-focus</code></td>
+              <td><code>#e4e4e7</code></td>
+              <td>High-contrast outlines when focusing input fields and dropdowns.</td>
+            </tr>
+            <tr>
+              <td><code>--text-primary</code></td>
+              <td><code>#fafafa</code></td>
+              <td>High-contrast white for headings, body copy, and brand names.</td>
+            </tr>
+            <tr>
+              <td><code>--text-secondary</code></td>
+              <td><code>#a1a1aa</code></td>
+              <td>Soft gray for subtitles, assistant prose, and metadata.</td>
+            </tr>
+            <tr>
+              <td><code>--text-muted</code></td>
+              <td><code>#71717a</code></td>
+              <td>Monospace telemetry, timestamps, and empty state hints.</td>
+            </tr>
+            <tr>
+              <td><code>--signal-ok</code></td>
+              <td><code>#10b981</code></td>
+              <td>Emerald green indicator for active models and live connections.</td>
+            </tr>
+            <tr>
+              <td><code>--signal-warn</code></td>
+              <td><code>#f59e0b</code></td>
+              <td>Amber warning tag for failover redirects (<code>[REROUTED: ...]</code>).</td>
+            </tr>
+            <tr>
+              <td><code>--signal-danger</code></td>
+              <td><code>#ef4444</code></td>
+              <td>Red indicator for stream connection failures and error notices.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 2: Layout & Geometry -->
+    <section class="spec-section">
+      <h2>2. Layout Architecture & Dimensions</h2>
+      <p>
+        Layout follows a strict two-column desktop workstation layout that automatically transitions into a mobile off-canvas drawer on viewports $\le$ 768px.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Desktop Dimension</th>
+              <th>Mobile (&le; 768px) Dimension</th>
+              <th>Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>App Shell</strong></td>
+              <td><code>100vw &times; 100vh</code></td>
+              <td><code>100vw &times; 100dvh</code></td>
+              <td>Uses <code>100dvh</code> to prevent mobile browser URL bar shifting.</td>
+            </tr>
+            <tr>
+              <td><strong>Sidebar Rail</strong></td>
+              <td><code>260px</code> (or <code>48px</code> collapsed)</td>
+              <td><code>280px</code> / <code>85vw</code> Drawer</td>
+              <td>Off-canvas drawer on mobile with dark backdrop blur.</td>
+            </tr>
+            <tr>
+              <td><strong>Top Company Banner</strong></td>
+              <td><code>56px</code> Fixed Height</td>
+              <td><code>50px</code> Fixed Height</td>
+              <td>Mounted at top of main screen; contains hamburger <code>☰</code> on mobile.</td>
+            </tr>
+            <tr>
+              <td><strong>Hero Container</strong></td>
+              <td><code>max-width: min(94vw, 1400px)</code></td>
+              <td><code>100%</code> width</td>
+              <td>Displays "What would you like to do?", composer, and 6 starter cards.</td>
+            </tr>
+            <tr>
+              <td><strong>Chat Scroll Region</strong></td>
+              <td><code>max-width: min(94vw, 1500px)</code></td>
+              <td><code>100%</code> width</td>
+              <td>Widescreen layout with <code>padding: 18px 24px</code> per message turn.</td>
+            </tr>
+            <tr>
+              <td><strong>Docked Composer</strong></td>
+              <td><code>max-width: min(94vw, 1500px)</code></td>
+              <td><code>100%</code> width</td>
+              <td>Includes safe-area inset padding: <code>env(safe-area-inset-bottom, 8px)</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Markdown Lists</strong></td>
+              <td><code>padding-left: 28px</code></td>
+              <td><code>padding-left: 20px</code></td>
+              <td>Item gap <code>7px</code>, margin <code>10px 0 16px</code>; zero hanging numbers.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 3: Model Matrix & Failover -->
+    <section class="spec-section">
+      <h2>3. 7-Model Catalog & Multi-Protocol Streaming Proxy</h2>
+      <p>
+        The backend acts as an omni-protocol translation proxy. It transforms varying streaming formats into unified client Server-Sent Events.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Model ID</th>
+              <th>Display Name</th>
+              <th>Primary Provider & Protocol</th>
+              <th>Fallback Provider & Model</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>auto</code></td>
+              <td>Auto (Direct)</td>
+              <td>Dynamic Heuristic Router</td>
+              <td>Automatic Provider Failover</td>
+            </tr>
+            <tr>
+              <td><code>beam-free</code></td>
+              <td>Beam Free</td>
+              <td>OpenCode Go (OpenAI protocol)</td>
+              <td>OpenRouter (<code>reflection/beam-1.0-501b-a23b</code>)</td>
+            </tr>
+            <tr>
+              <td><code>deepseek-v4.1-flash</code></td>
+              <td>DeepSeek V4.1 Flash</td>
+              <td>OpenCode Go (OpenAI protocol)</td>
+              <td>OpenRouter (<code>deepseek/deepseek-v4.1-flash</code>)</td>
+            </tr>
+            <tr>
+              <td><code>glm-5.3-flash</code></td>
+              <td>GLM 5.3 Flash</td>
+              <td>OpenCode Go (OpenAI protocol)</td>
+              <td>OpenRouter (<code>z-ai/glm-5.3-flash</code>)</td>
+            </tr>
+            <tr>
+              <td><code>space-bunny</code></td>
+              <td>Space Bunny</td>
+              <td>OpenCode Go (OpenAI protocol)</td>
+              <td>OpenRouter (<code>deepseek/deepseek-v4.1-flash</code>)</td>
+            </tr>
+            <tr>
+              <td><code>gemini-3.8-flash</code></td>
+              <td>Gemini 3.8 Flash</td>
+              <td>Google Gemini (Gemini REST protocol)</td>
+              <td>OpenRouter (<code>google/gemini-3.8-flash</code>)</td>
+            </tr>
+            <tr>
+              <td><code>qwen3.8-flash</code></td>
+              <td>Qwen 3.8 Flash</td>
+              <td>OpenCode Go (Anthropic protocol)</td>
+              <td>OpenRouter (<code>qwen/qwen3.8-flash</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Streaming Protocol Parsers (streamParsers.ts)</h3>
+      <ul>
+        <li><strong>OpenAI Protocol:</strong> Parses <code>choices[0].delta.reasoning_content</code> as reasoning deltas and <code>choices[0].delta.content</code> as prose text.</li>
+        <li><strong>Anthropic Protocol:</strong> Parses <code>content_block_delta</code> with <code>delta.type === 'thinking_delta'</code> as reasoning traces and <code>'text_delta'</code> as prose text.</li>
+        <li><strong>Gemini Protocol:</strong> Iterates <code>candidates[0].content.parts[]</code> checking <code>part.thought === true</code> for reasoning traces and standard <code>part.text</code> for prose text.</li>
+      </ul>
+    </section>
+
+    <!-- Section 4: Security & Authentication -->
+    <section class="spec-section">
+      <h2>4. Passkey Authentication & Security Architecture</h2>
+      <ul>
+        <li><strong>Master Passkey:</strong> <code>thanh2099</code></li>
+        <li><strong>Settings Modal Protection:</strong> Clicking <strong>🔒 ADMIN</strong> in the top banner or bottom of the sidebar prompts the user for the passkey. Incorrect entries surface an inline shake warning.</li>
+        <li><strong>Session Caching:</strong> Successful entry persists authentication in <code>sessionStorage</code> (<code>thanh_admin_auth_v1: "true"</code>) until the user clicks <strong>🔒 LOCK</strong> or closes the browser tab.</li>
+        <li><strong>Backend Endpoint Hardening:</strong> <code>GET /api/providers/status</code> strictly enforces the header <code>x-admin-passkey: "thanh2099"</code>. Requests without it return <code>HTTP 401 Unauthorized</code>.</li>
+        <li><strong>Key Isolation:</strong> Provider keys are loaded securely from <code>.env</code> on the server and are never exposed in the client bundle. Users may also provide runtime client overrides in the settings modal.</li>
+      </ul>
+    </section>
+
+    <!-- Section 5: Dual-Cloud Deployment -->
+    <section class="spec-section">
+      <h2>5. Dual-Cloud Deployment Blueprint (Render + Netlify)</h2>
+      <p>
+        The platform separates static frontend delivery from long-running stateful SSE streaming to maximize performance and eliminate cold starts.
+      </p>
+
+      <h3>Step 1: Render.com Backend Web Service</h3>
+      <ol>
+        <li>Create a new <strong>Web Service</strong> on Render connected to the GitHub repository.</li>
+        <li>Select <strong>Node</strong> runtime, branch <code>master</code>.</li>
+        <li>Build Command: <code>npm install</code>.</li>
+        <li>Start Command: <code>npm start</code> (executes <code>tsx src/server/index.ts</code> bound to <code>0.0.0.0</code>).</li>
+        <li>Set Environment Variables: <code>OPENCODE_GO_API_KEY</code>, <code>GEMINI_API_KEY</code>, <code>OPENROUTER_API_KEY</code>.</li>
+      </ol>
+
+      <h3>Step 2: Netlify Frontend CDN</h3>
+      <ol>
+        <li>Link the GitHub repository on <strong>app.netlify.com</strong>.</li>
+        <li>Build Command: <code>npm run build</code>, Publish Directory: <code>dist</code>.</li>
+        <li>Configure <code>netlify.toml</code> and <code>public/_redirects</code>:
+          <div class="code-box">/api/*  https://thanh-llm-arena.onrender.com/api/:splat  200!
+/*      /index.html                                       200</div>
+        </li>
+        <li>Automatic runtime discovery in <code>src/client/lib/apiConfig.ts</code> handles direct CORS connections as well as proxy redirects.</li>
+      </ol>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">Prompt copied to clipboard!</div>
+
+  <script>
+    // Theme Toggle Functionality
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('thanh_spec_theme', newTheme);
+
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (newTheme === 'dark') {
+        icon.textContent = '☀️';
+        label.textContent = 'Light Mode';
+      } else {
+        icon.textContent = '🌙';
+        label.textContent = 'Dark Mode';
+      }
+    }
+
+    // Initialize Theme
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('thanh_spec_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (savedTheme === 'dark') {
+        icon.textContent = '☀️';
+        label.textContent = 'Light Mode';
+      } else {
+        icon.textContent = '🌙';
+        label.textContent = 'Dark Mode';
+      }
+    })();
+
+    // Copy Master Prompt
+    function copyMasterPrompt() {
+      const content = document.getElementById('masterPromptContent').innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('Master prompt copied to clipboard!');
+      }).catch(err => {
+        showToast('Error copying to clipboard');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
