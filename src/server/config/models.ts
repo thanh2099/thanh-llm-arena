@@ -185,10 +185,14 @@ export interface ResolvedModelRoute {
 export function classifyAutoModel(prompt: string, hasImageAttachment: boolean): Exclude<ModelId, 'auto'> {
   if (hasImageAttachment) return 'gemini-3.8-flash';
   const lower = prompt.toLowerCase();
-  if (/\b(typescript|react|python|rust|sql|algorithm|function|bug|refactor|landing page|dashboard|game|fullstack|storefront|code|html|css)\b/.test(lower)) {
+  if (
+    /\b(typescript|react|javascript|python|rust|golang|c\+\+|java|sql|algorithm|function|bug|refactor|landing page|dashboard|game|fullstack|storefront|code|html|css|script|powershell|power shell|bash|shell|terminal|sh|zsh|command|cmd|bat|batch|regex|json|yaml|api|backend|frontend|query|git|docker)\b/.test(
+      lower
+    )
+  ) {
     return 'deepseek-v4.1-flash';
   }
-  if (/\b(prove|math|theorem|logic|step by step|analyze|architecture)\b/.test(lower)) {
+  if (/\b(prove|math|theorem|logic|step by step|analyze|architecture|benchmark)\b/.test(lower)) {
     return 'glm-5.3-flash';
   }
   return 'gemini-3.8-flash';

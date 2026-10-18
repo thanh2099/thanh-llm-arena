@@ -30,6 +30,17 @@ describe('Model Catalog & Smart Router', () => {
     expect(route.fallbacks[0]?.targetModel).toBe('deepseek/deepseek-v4.1-flash');
   });
 
+  it('routes auto to deepseek-v4.1-flash for powershell and script prompts', () => {
+    const route = resolveModelRoute(
+      'auto',
+      'write me a simple power shell script that renames all files in a certain folder to date.01.extension etc',
+      false,
+      'auto'
+    );
+    expect(route.resolvedModelId).toBe('deepseek-v4.1-flash');
+    expect(route.primary.provider).toBe('opencode-go');
+  });
+
   it('respects explicit providerOverride when set to openrouter', () => {
     const route = resolveModelRoute('beam-free', 'Hello', false, 'openrouter');
     expect(route.primary.provider).toBe('openrouter');

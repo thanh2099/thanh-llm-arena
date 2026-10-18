@@ -266,10 +266,11 @@ export const App: React.FC = () => {
         ) : (
           <div className="active-thread-layout">
             <div className="thread-scroll-region">
-              {activeThread.messages.map((msg) => (
+              {activeThread.messages.map((msg, idx) => (
                 <MessageItem
                   key={msg.id}
                   message={msg}
+                  isStreaming={isStreaming && idx === activeThread.messages.length - 1}
                   onRetry={msg.role === 'assistant' ? () => handleRetryMessage(msg.id) : undefined}
                   onOpenSettings={() => setSettingsOpen(true)}
                 />

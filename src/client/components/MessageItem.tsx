@@ -5,6 +5,7 @@ import type { ChatMessage } from '../../shared/types';
 
 export interface MessageItemProps {
   message: ChatMessage;
+  isStreaming?: boolean;
   onRetry?: () => void;
   onOpenSettings?: () => void;
 }
@@ -33,12 +34,17 @@ const customMarked = new Marked({
   },
 });
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry, onOpenSettings }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({
+  message,
+  isStreaming = false,
+  onRetry,
+  onOpenSettings,
+}) => {
   const [reasoningOpen, setReasoningOpen] = useState(true);
 
   const html = useMemo(() => {
-    if (message.role === 'user') return '';
-    return customMarked.parse(message.content || '', { async: false }) as string;
+    if (message.role === 'user' || !message.content) return '';
+    return customMarked.parse(message.content, { async: false }) as string;
   }, [message.role, message.content]);
 
   if (message.role === 'user') {
@@ -132,12 +138,46 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, onRetry, onOp
             )}
           </div>
         </div>
-      ) : (
+      ) : isStreaming ? (
+        <div className="turn-markdown-prose" onClick={handleProseClick}>
+          {html ? (
+            <div dangerouslySetInnerHTML={{ __html: html + '<span class="streaming-cursor">▋</span>' }} />
+          ) : (
+            <div className="turn-connecting">
+              <span className="connecting-dot">●</span>
+              <span>Connecting to {message.resolvedModelName || message.modelId || 'provider'}...</span>
+              <span className="streaming-cursor">▋</span>
+            </div>
+          )}
+        </div>
+      ) : html ? (
         <div
           className="turn-markdown-prose"
           onClick={handleProseClick}
-          dangerouslySetInnerHTML={{ __html: html || '<span class="streaming-cursor">▋</span>' }}
+          dangerouslySetInnerHTML={{ __html: html }}
         />
+      ) : message.reasoning ? (
+        <div className="turn-markdown-prose">
+          <span className="turn-connecting" style={{ color: 'var(--text-secondary)' }}>
+            [Reasoning complete — no final response text generated]
+          </span>
+        </div>
+      ) : (
+        <div className="turn-error-box">
+          <div className="turn-error-title">[EMPTY RESPONSE] The provider completed without generating content.</div>
+          <div className="turn-error-actions">
+            {onRetry && (
+              <button type="button" className="ag-override-chip" onClick={onRetry}>
+                [RETRY]
+              </button>
+            )}
+            {onOpenSettings && (
+              <button type="button" className="ag-override-chip" onClick={onOpenSettings}>
+                [CONFIGURE KEYS]
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -143,6 +143,7 @@ async function consumeSSEStream(
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let deltaCount = 0;
 
   while (true) {
     const { value, done } = await reader.read();
@@ -155,8 +156,21 @@ async function consumeSSEStream(
         const data = line.slice(5).trim();
         for (const item of parser(data)) {
           onDelta(item);
+          deltaCount++;
         }
       }
     }
+  }
+
+  if (buffer.trim().startsWith('data:')) {
+    const data = buffer.trim().slice(5).trim();
+    for (const item of parser(data)) {
+      onDelta(item);
+      deltaCount++;
+    }
+  }
+
+  if (deltaCount === 0) {
+    throw new Error('Provider returned empty stream without text or reasoning');
   }
 }

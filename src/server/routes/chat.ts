@@ -12,12 +12,17 @@ export type ProviderInvoker = (
   signal?: AbortSignal
 ) => Promise<void>;
 
+export interface FailoverExecutionOptions {
+  firstTokenTimeoutMs?: number;
+}
+
 export async function executeChatWithFailover(
   payload: ChatRequestPayload,
   envKeys: Required<ApiKeysOverride>,
   emit: (event: SSEEvent) => void,
   invoker: ProviderInvoker = invokeProviderStream,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: FailoverExecutionOptions
 ): Promise<void> {
   const startTime = Date.now();
   const lastMsg = payload.messages[payload.messages.length - 1];
@@ -39,7 +44,30 @@ export async function executeChatWithFailover(
   let lastError = 'All providers failed';
 
   for (let i = 0; i < candidates.length; i++) {
+    if (signal?.aborted) return;
     const spec = candidates[i];
+    const hasFallback = i < candidates.length - 1;
+    const candidateController = new AbortController();
+    let localAbortedDueToTimeout = false;
+
+    const onExternalAbort = () => {
+      candidateController.abort();
+    };
+    signal?.addEventListener('abort', onExternalAbort, { once: true });
+
+    let firstTokenTimer: NodeJS.Timeout | null = null;
+    let receivedFirstDelta = false;
+
+    if (hasFallback) {
+      const timeoutMs = options?.firstTokenTimeoutMs ?? 6000;
+      firstTokenTimer = setTimeout(() => {
+        if (!receivedFirstDelta) {
+          localAbortedDueToTimeout = true;
+          candidateController.abort(new Error(`First token timeout (${Math.round(timeoutMs / 1000)}s)`));
+        }
+      }, timeoutMs);
+    }
+
     try {
       emit({
         type: 'meta',
@@ -54,16 +82,27 @@ export async function executeChatWithFailover(
         payload.messages,
         keys,
         (delta) => {
+          if (!receivedFirstDelta) {
+            receivedFirstDelta = true;
+            if (firstTokenTimer) {
+              clearTimeout(firstTokenTimer);
+              firstTokenTimer = null;
+            }
+          }
           emit(delta);
         },
-        signal
+        candidateController.signal
       );
 
       emit({ type: 'done', latencyMs: Date.now() - startTime });
       return;
     } catch (err) {
-      if (signal?.aborted) return;
-      const msg = err instanceof Error ? err.message : String(err);
+      if (signal?.aborted && !localAbortedDueToTimeout) return;
+      const msg = localAbortedDueToTimeout
+        ? `First token timeout (${Math.round((options?.firstTokenTimeoutMs ?? 6000) / 1000)}s)`
+        : err instanceof Error
+        ? err.message
+        : String(err);
       lastError = msg;
       const nextSpec = candidates[i + 1];
       if (nextSpec) {
@@ -76,6 +115,12 @@ export async function executeChatWithFailover(
       } else {
         emit({ type: 'error', message: lastError, provider: spec.provider });
       }
+    } finally {
+      if (firstTokenTimer) {
+        clearTimeout(firstTokenTimer);
+        firstTokenTimer = null;
+      }
+      signal?.removeEventListener('abort', onExternalAbort);
     }
   }
 }
@@ -86,6 +131,8 @@ function formatFailoverReason(rawMsg: string): string {
   if (/api_key_expired/i.test(rawMsg)) return `${status ? status + ' ' : ''}API_KEY_EXPIRED`;
   if (/high demand|UNAVAILABLE/i.test(rawMsg)) return `${status ? status + ' ' : ''}HIGH_DEMAND`;
   if (/rate.?limit|429/i.test(rawMsg)) return `${status ? status + ' ' : ''}RATE_LIMITED`;
+  if (/timeout/i.test(rawMsg)) return 'RESPONSE_TIMEOUT';
+  if (/empty stream/i.test(rawMsg)) return 'EMPTY_STREAM';
   const clean = rawMsg.replace(/^HTTP\s+/i, '').replace(/[\r\n{}"]+/g, ' ').replace(/\s+/g, ' ').trim();
   return clean.slice(0, 48);
 }
@@ -110,8 +157,11 @@ export function createChatRouter(getEnvKeys: () => Required<ApiKeysOverride>): R
 
   router.post('/chat', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.setHeader('Content-Encoding', 'identity');
+    res.flushHeaders();
 
     const controller = new AbortController();
     res.on('close', () => {
