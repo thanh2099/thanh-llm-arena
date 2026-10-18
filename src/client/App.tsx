@@ -10,13 +10,17 @@ import type {
 } from '../shared/types';
 import {
   loadApiKeysOverride,
+  loadHideSettingsButton,
   loadProviderOverride,
   loadSelectedModel,
   loadThreads,
   saveApiKeysOverride,
+  saveHideSettingsButton,
   saveProviderOverride,
   saveSelectedModel,
   saveThreads,
+  isSessionAuthenticated,
+  setSessionAuthenticated,
 } from './lib/storage';
 import { streamChatCompletion } from './lib/sseClient';
 import { Sidebar } from './components/Sidebar';
@@ -30,6 +34,8 @@ export const App: React.FC = () => {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(() => loadThreads()[0]?.id ?? null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hideSettingsBtn, setHideSettingsBtn] = useState<boolean>(() => loadHideSettingsButton());
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => isSessionAuthenticated());
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedModel, setSelectedModel] = useState<ModelId>(() => loadSelectedModel());
@@ -41,6 +47,17 @@ export const App: React.FC = () => {
   useEffect(() => {
     saveThreads(threads);
   }, [threads]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'S' || e.key === 's')) {
+        e.preventDefault();
+        setSettingsOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const activeThread = threads.find((t) => t.id === activeThreadId) ?? null;
 
@@ -244,6 +261,8 @@ export const App: React.FC = () => {
         threads={threads}
         activeThreadId={activeThreadId}
         isOpen={sidebarOpen}
+        hideSettingsButton={hideSettingsBtn}
+        isUnlocked={isUnlocked}
         onToggle={() => setSidebarOpen((v) => !v)}
         onNewThread={() => setActiveThreadId(null)}
         onSelectThread={(id) => setActiveThreadId(id)}
@@ -255,6 +274,10 @@ export const App: React.FC = () => {
           if (activeThreadId === id) setActiveThreadId(null);
         }}
         onOpenSettings={() => setSettingsOpen(true)}
+        onLockSettings={() => {
+          setSessionAuthenticated(false);
+          setIsUnlocked(false);
+        }}
       />
 
       <main className="workspace-main">
@@ -284,11 +307,23 @@ export const App: React.FC = () => {
       <SettingsModal
         isOpen={settingsOpen}
         keys={apiKeys}
+        hideSidebarButton={hideSettingsBtn}
+        onToggleHideSidebarButton={(hide) => {
+          setHideSettingsBtn(hide);
+          saveHideSettingsButton(hide);
+        }}
         onSave={(nextKeys) => {
           setApiKeys(nextKeys);
           saveApiKeysOverride(nextKeys);
+          setIsUnlocked(isSessionAuthenticated());
         }}
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => {
+          setSettingsOpen(false);
+          setIsUnlocked(isSessionAuthenticated());
+        }}
+        onLock={() => {
+          setIsUnlocked(false);
+        }}
       />
     </div>
   );

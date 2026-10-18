@@ -144,7 +144,12 @@ export function createChatRouter(getEnvKeys: () => Required<ApiKeysOverride>): R
     res.json({ models: MODEL_CATALOG });
   });
 
-  router.get('/providers/status', (_req, res) => {
+  router.get('/providers/status', (req, res) => {
+    const adminKey = req.headers['x-admin-passkey'];
+    if (adminKey !== 'thanh2099') {
+      res.status(401).json({ error: 'Unauthorized: Admin passkey required' });
+      return;
+    }
     const keys = getEnvKeys();
     res.json({
       providers: {

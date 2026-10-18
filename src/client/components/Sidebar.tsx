@@ -6,24 +6,30 @@ export interface SidebarProps {
   threads: ChatThread[];
   activeThreadId: string | null;
   isOpen: boolean;
+  hideSettingsButton?: boolean;
+  isUnlocked?: boolean;
   onToggle: () => void;
   onNewThread: () => void;
   onSelectThread: (id: string) => void;
   onRenameThread: (id: string, title: string) => void;
   onDeleteThread: (id: string) => void;
   onOpenSettings: () => void;
+  onLockSettings?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   threads,
   activeThreadId,
   isOpen,
+  hideSettingsButton = false,
+  isUnlocked = false,
   onToggle,
   onNewThread,
   onSelectThread,
   onRenameThread,
   onDeleteThread,
   onOpenSettings,
+  onLockSettings,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -118,12 +124,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      <div className="sidebar-footer">
-        <button type="button" className="sidebar-settings-btn" onClick={onOpenSettings}>
-          <span>● API KEYS &amp; PROVIDERS</span>
-          <span>⚙</span>
-        </button>
-      </div>
+      {!hideSettingsButton && (
+        <div className="sidebar-footer">
+          {isUnlocked ? (
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <button
+                type="button"
+                className="sidebar-settings-btn"
+                style={{ flex: 1 }}
+                onClick={onOpenSettings}
+                title="API Keys &amp; Providers (Unlocked)"
+              >
+                <span style={{ color: 'var(--signal-ok)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="connecting-dot">●</span> API KEYS &amp; PROVIDERS
+                </span>
+                <span>⚙</span>
+              </button>
+              {onLockSettings && (
+                <button
+                  type="button"
+                  className="ag-override-chip"
+                  onClick={onLockSettings}
+                  title="Lock admin session"
+                  style={{ padding: '7px 8px', fontSize: '11px' }}
+                >
+                  🔒
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="sidebar-settings-btn"
+              onClick={onOpenSettings}
+              title="Password Protected (Passkey Required)"
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> API KEYS &amp; PROVIDERS
+              </span>
+              <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                [LOCKED]
+              </span>
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 };

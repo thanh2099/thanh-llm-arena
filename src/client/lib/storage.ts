@@ -51,3 +51,42 @@ export function loadApiKeysOverride(): ApiKeysOverride {
 export function saveApiKeysOverride(keys: ApiKeysOverride): void {
   localStorage.setItem(KEYS_KEY, JSON.stringify(keys));
 }
+
+const HIDE_SETTINGS_KEY = 'thanhllm_hide_settings_btn_v1';
+const AUTH_SESSION_KEY = 'thanh_admin_auth_v1';
+
+export function loadHideSettingsButton(): boolean {
+  try {
+    return localStorage.getItem(HIDE_SETTINGS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function saveHideSettingsButton(hidden: boolean): void {
+  try {
+    localStorage.setItem(HIDE_SETTINGS_KEY, hidden ? 'true' : 'false');
+  } catch {
+    // Quota guard
+  }
+}
+
+export function isSessionAuthenticated(): boolean {
+  try {
+    return sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function setSessionAuthenticated(authed: boolean): void {
+  try {
+    if (authed) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+    } else {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+    }
+  } catch {
+    // Quota guard
+  }
+}
