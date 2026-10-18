@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import type { ApiKeysOverride, ProviderId } from '../../shared/types';
 import { isSessionAuthenticated, setSessionAuthenticated } from '../lib/storage';
+import { getApiBaseUrl } from '../lib/apiConfig';
 
 export interface SettingsModalProps {
   isOpen: boolean;
@@ -42,7 +43,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (!isOpen || !isAuthenticated) return;
     setDraft(keys);
     let cancelled = false;
-    fetch('/api/providers/status', {
+    const baseUrl = getApiBaseUrl();
+    fetch(`${baseUrl}/api/providers/status`, {
       headers: { 'x-admin-passkey': 'thanh2099' },
     })
       .then((res) => (res.ok ? res.json() : null))

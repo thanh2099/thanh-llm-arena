@@ -1,12 +1,14 @@
 // src/client/lib/sseClient.ts
 import type { ChatRequestPayload, SSEEvent } from '../../shared/types';
+import { getApiBaseUrl } from './apiConfig';
 
 export async function streamChatCompletion(
   payload: ChatRequestPayload,
   onEvent: (event: SSEEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await fetch('/api/chat', {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
