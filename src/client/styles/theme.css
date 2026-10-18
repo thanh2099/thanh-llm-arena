@@ -48,9 +48,11 @@ button {
 .app-shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   background: var(--bg-canvas);
+  position: relative;
 }
 
 /* Sidebar */
@@ -1251,3 +1253,203 @@ button {
   color: var(--signal-danger);
   margin-top: 2px;
 }
+
+/* ==========================================================================
+   Mobile Responsive Rules (Android / iOS / Tablets <= 768px)
+   ========================================================================== */
+
+.top-banner-mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Off-canvas mobile sidebar drawer */
+  .sidebar-collapsed {
+    display: none !important;
+  }
+
+  .sidebar-rail {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    z-index: 200 !important;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.85);
+    background: var(--bg-surface);
+  }
+
+  .sidebar-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
+    z-index: 190;
+  }
+
+  /* Fixed Top Company Banner on Mobile */
+  .workspace-top-banner {
+    height: 50px;
+    min-height: 50px;
+  }
+
+  .top-banner-inner {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .top-banner-mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    background: var(--bg-canvas);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .top-banner-left .top-banner-live-pill,
+  .top-banner-left .top-banner-pipe,
+  .top-banner-left .top-banner-telemetry-item {
+    display: none !important;
+  }
+
+  .top-banner-center {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .top-banner-brand-container {
+    gap: 8px;
+    padding: 2px 6px;
+  }
+
+  .top-banner-logo {
+    width: 22px;
+    height: 22px;
+  }
+
+  .top-banner-brand-name {
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .top-banner-brand-sub {
+    display: none !important;
+  }
+
+  .top-banner-right .top-banner-model-pill {
+    display: none !important;
+  }
+
+  .top-banner-admin-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Hero Landing on Mobile */
+  .arena-hero-container {
+    padding: 16px 12px 24px;
+    align-items: flex-start;
+  }
+
+  .arena-hero-inner {
+    gap: 16px;
+  }
+
+  .arena-hero-title {
+    font-size: 24px;
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .arena-starter-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .arena-starter-card {
+    padding: 10px 12px;
+  }
+
+  /* Composer on Mobile */
+  .ag-composer {
+    padding: 10px 12px 10px;
+    gap: 8px;
+  }
+
+  .ag-textarea {
+    font-size: 14px;
+    min-height: 52px;
+    max-height: 160px;
+  }
+
+  .ag-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ag-toolbar-left {
+    gap: 6px;
+    flex: 1;
+  }
+
+  .ag-mode-pill {
+    display: none !important;
+  }
+
+  .ag-model-pill {
+    font-size: 11px;
+    height: 28px;
+    padding: 0 8px;
+  }
+
+  .ag-dropdown-menu {
+    width: min(92vw, 340px);
+    left: 0;
+  }
+
+  /* Docked Composer & Chat Thread on Mobile */
+  .docked-composer-bar {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 8px));
+  }
+
+  .thread-scroll-region {
+    padding: 12px 10px;
+    gap: 12px;
+  }
+
+  .turn-row {
+    padding: 14px 14px;
+  }
+
+  .turn-meta {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  .turn-markdown-prose {
+    font-size: 13px;
+  }
+
+  .turn-markdown-prose ol,
+  .turn-markdown-prose ul {
+    padding-left: 20px;
+  }
+
+  /* Settings Modal on Mobile */
+  .modal-panel {
+    width: 94vw;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+}
+

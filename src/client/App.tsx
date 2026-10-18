@@ -33,7 +33,9 @@ import { CompanyTopBanner } from './components/CompanyTopBanner';
 export const App: React.FC = () => {
   const [threads, setThreads] = useState<ChatThread[]>(() => loadThreads());
   const [activeThreadId, setActiveThreadId] = useState<string | null>(() => loadThreads()[0]?.id ?? null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth > 768 : true
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hideSettingsBtn, setHideSettingsBtn] = useState<boolean>(() => loadHideSettingsButton());
   const [isUnlocked, setIsUnlocked] = useState<boolean>(() => isSessionAuthenticated());
@@ -265,8 +267,18 @@ export const App: React.FC = () => {
         hideSettingsButton={hideSettingsBtn}
         isUnlocked={isUnlocked}
         onToggle={() => setSidebarOpen((v) => !v)}
-        onNewThread={() => setActiveThreadId(null)}
-        onSelectThread={(id) => setActiveThreadId(id)}
+        onNewThread={() => {
+          setActiveThreadId(null);
+          if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+            setSidebarOpen(false);
+          }
+        }}
+        onSelectThread={(id) => {
+          setActiveThreadId(id);
+          if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+            setSidebarOpen(false);
+          }
+        }}
         onRenameThread={(id, title) =>
           setThreads((prev) => prev.map((t) => (t.id === id ? { ...t, title } : t)))
         }
@@ -281,10 +293,19 @@ export const App: React.FC = () => {
         }}
       />
 
+      {sidebarOpen && (
+        <div
+          className="sidebar-mobile-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <main className="workspace-main">
         <CompanyTopBanner
           onOpenSettings={() => setSettingsOpen(true)}
           isUnlocked={isUnlocked}
+          onToggleSidebar={() => setSidebarOpen((v) => !v)}
         />
         {!activeThread || activeThread.messages.length === 0 ? (
           <HeroLanding

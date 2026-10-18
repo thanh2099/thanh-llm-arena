@@ -4,17 +4,30 @@ import React from 'react';
 export interface CompanyTopBannerProps {
   onOpenSettings: () => void;
   isUnlocked?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const CompanyTopBanner: React.FC<CompanyTopBannerProps> = ({
   onOpenSettings,
   isUnlocked = false,
+  onToggleSidebar,
 }) => {
   return (
     <header className="workspace-top-banner">
       <div className="top-banner-inner">
         {/* Left Telemetry Cluster */}
         <div className="top-banner-left">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              className="top-banner-mobile-menu-btn"
+              onClick={onToggleSidebar}
+              title="Toggle sidebar menu"
+              aria-label="Toggle navigation"
+            >
+              ☰
+            </button>
+          )}
           <div className="top-banner-live-pill">
             <span className="connecting-dot">●</span>
             <span className="top-banner-live-label">LIVE ARENA</span>
