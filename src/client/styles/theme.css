@@ -835,13 +835,13 @@ button {
 }
 
 .turn-row {
-  padding: 14px 16px;
+  padding: 18px 24px;
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
   background: var(--bg-surface);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .turn-user {
@@ -940,14 +940,92 @@ button {
 
 /* Markdown Prose */
 .turn-markdown-prose {
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 13.5px;
+  line-height: 1.65;
   color: var(--text-primary);
   max-width: 100%;
 }
 
 .turn-markdown-prose p {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.turn-markdown-prose ol,
+.turn-markdown-prose ul {
+  margin: 10px 0 16px;
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.turn-markdown-prose ol {
+  list-style-type: decimal;
+}
+
+.turn-markdown-prose ul {
+  list-style-type: disc;
+}
+
+.turn-markdown-prose li {
+  line-height: 1.6;
+  padding-left: 4px;
+}
+
+.turn-markdown-prose li::marker {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.turn-markdown-prose hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 18px 0;
+}
+
+.turn-markdown-prose h1,
+.turn-markdown-prose h2,
+.turn-markdown-prose h3,
+.turn-markdown-prose h4 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 16px 0 8px;
+  line-height: 1.35;
+}
+
+.turn-markdown-prose h1 { font-size: 18px; }
+.turn-markdown-prose h2 { font-size: 16px; }
+.turn-markdown-prose h3 { font-size: 14.5px; }
+
+.turn-markdown-prose blockquote {
+  border-left: 3px solid var(--border-strong);
+  padding: 8px 14px;
+  margin: 14px 0;
+  color: var(--text-secondary);
+  background: var(--bg-canvas);
+  border-radius: 0 4px 4px 0;
+}
+
+.turn-markdown-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 12.5px;
+}
+
+.turn-markdown-prose th,
+.turn-markdown-prose td {
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.turn-markdown-prose th {
+  background: var(--bg-elevated);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
 }
 
 .turn-markdown-prose pre {
