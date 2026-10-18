@@ -237,6 +237,163 @@ button {
   position: relative;
 }
 
+/* Fixed Company Top Banner (Top Middle) */
+.workspace-top-banner {
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+  background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.06), transparent 65%);
+}
+
+.top-banner-inner {
+  width: 100%;
+  max-width: min(96vw, 1500px);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.top-banner-left,
+.top-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.top-banner-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.top-banner-pipe {
+  color: var(--border-strong);
+}
+
+.top-banner-telemetry-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.top-banner-telemetry-item .telemetry-val {
+  color: var(--text-secondary);
+}
+
+.top-banner-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 120ms linear;
+}
+
+.top-banner-center:hover {
+  opacity: 0.9;
+}
+
+.top-banner-brand-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-banner-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-canvas);
+}
+
+.top-banner-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.top-banner-brand-name {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.top-banner-brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.top-banner-model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.top-banner-model-pill .telemetry-dim {
+  color: var(--text-muted);
+}
+
+.top-banner-model-pill .telemetry-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.top-banner-admin-btn {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-canvas);
+  color: var(--text-secondary);
+  transition: border-color 100ms linear, color 100ms linear;
+}
+
+.top-banner-admin-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+@media (max-width: 900px) {
+  .top-banner-left .top-banner-telemetry-item,
+  .top-banner-pipe {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .top-banner-right .top-banner-model-pill {
+    display: none;
+  }
+}
+
 /* Hero Landing (Arena.ai layout) */
 .arena-hero-container {
   flex: 1;

@@ -28,6 +28,7 @@ import { HeroLanding } from './components/HeroLanding';
 import { AntigravityComposer } from './components/AntigravityComposer';
 import { MessageItem } from './components/MessageItem';
 import { SettingsModal } from './components/SettingsModal';
+import { CompanyTopBanner } from './components/CompanyTopBanner';
 
 export const App: React.FC = () => {
   const [threads, setThreads] = useState<ChatThread[]>(() => loadThreads());
@@ -281,6 +282,10 @@ export const App: React.FC = () => {
       />
 
       <main className="workspace-main">
+        <CompanyTopBanner
+          onOpenSettings={() => setSettingsOpen(true)}
+          isUnlocked={isUnlocked}
+        />
         {!activeThread || activeThread.messages.length === 0 ? (
           <HeroLanding
             composerSlot={composerElement}
