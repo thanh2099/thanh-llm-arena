@@ -16,6 +16,23 @@ export interface FailoverExecutionOptions {
   firstTokenTimeoutMs?: number;
 }
 
+const ENDPOINT_COOLDOWN_MS = 60_000;
+const endpointCooldownUntil = new Map<string, number>();
+
+function specKey(spec: ProviderEndpointSpec): string {
+  return `${spec.provider}:${spec.targetModel}`;
+}
+
+function isSpecOnCooldown(spec: ProviderEndpointSpec): boolean {
+  const until = endpointCooldownUntil.get(specKey(spec));
+  if (!until) return false;
+  if (Date.now() > until) {
+    endpointCooldownUntil.delete(specKey(spec));
+    return false;
+  }
+  return true;
+}
+
 export async function executeChatWithFailover(
   payload: ChatRequestPayload,
   envKeys: Required<ApiKeysOverride>,
@@ -40,7 +57,14 @@ export async function executeChatWithFailover(
     openrouter: payload.apiKeys?.openrouter?.trim() || envKeys.openrouter,
   };
 
-  const candidates = [route.primary, ...route.fallbacks];
+  const rawCandidates = [route.primary, ...route.fallbacks];
+  const useCircuitBreaker = invoker === invokeProviderStream;
+  const candidates = useCircuitBreaker
+    ? [
+        ...rawCandidates.filter((s) => !isSpecOnCooldown(s)),
+        ...rawCandidates.filter((s) => isSpecOnCooldown(s)),
+      ]
+    : rawCandidates;
   let lastError = 'All providers failed';
 
   for (let i = 0; i < candidates.length; i++) {
@@ -59,11 +83,11 @@ export async function executeChatWithFailover(
     let receivedFirstDelta = false;
 
     if (hasFallback) {
-      const timeoutMs = options?.firstTokenTimeoutMs ?? 6000;
+      const timeoutMs = options?.firstTokenTimeoutMs ?? 3500;
       firstTokenTimer = setTimeout(() => {
         if (!receivedFirstDelta) {
           localAbortedDueToTimeout = true;
-          candidateController.abort(new Error(`First token timeout (${Math.round(timeoutMs / 1000)}s)`));
+          candidateController.abort(new Error(`First token timeout (${(timeoutMs / 1000).toFixed(1)}s)`));
         }
       }, timeoutMs);
     }
@@ -94,12 +118,18 @@ export async function executeChatWithFailover(
         candidateController.signal
       );
 
+      if (useCircuitBreaker) {
+        endpointCooldownUntil.delete(specKey(spec));
+      }
       emit({ type: 'done', latencyMs: Date.now() - startTime });
       return;
     } catch (err) {
       if (signal?.aborted && !localAbortedDueToTimeout) return;
+      if (useCircuitBreaker) {
+        endpointCooldownUntil.set(specKey(spec), Date.now() + ENDPOINT_COOLDOWN_MS);
+      }
       const msg = localAbortedDueToTimeout
-        ? `First token timeout (${Math.round((options?.firstTokenTimeoutMs ?? 6000) / 1000)}s)`
+        ? `First token timeout (${((options?.firstTokenTimeoutMs ?? 3500) / 1000).toFixed(1)}s)`
         : err instanceof Error
         ? err.message
         : String(err);
@@ -139,6 +169,10 @@ function formatFailoverReason(rawMsg: string): string {
 
 export function createChatRouter(getEnvKeys: () => Required<ApiKeysOverride>): Router {
   const router = Router();
+
+  router.get('/health', (_req, res) => {
+    res.json({ ok: true, ts: Date.now() });
+  });
 
   router.get('/models', (_req, res) => {
     res.json({ models: MODEL_CATALOG });

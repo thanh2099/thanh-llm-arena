@@ -39,6 +39,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         targetModel: 'google/gemini-3.8-flash',
         endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
       },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
+      },
     ],
   },
   {
@@ -83,6 +89,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         targetModel: 'deepseek/deepseek-v4.1-flash',
         endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
       },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
+      },
     ],
   },
   {
@@ -117,7 +129,7 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
     primary: {
       provider: 'opencode-go',
       protocol: 'openai',
-      targetModel: 'space-bunny',
+      targetModel: 'minimax-m3.1-flash-free',
       endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
     },
     fallbacks: [
@@ -126,6 +138,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         protocol: 'openai',
         targetModel: 'deepseek/deepseek-v4.1-flash',
         endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
       },
     ],
   },
@@ -148,6 +166,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         protocol: 'openai',
         targetModel: 'google/gemini-3.8-flash',
         endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+      {
+        provider: 'opencode-go',
+        protocol: 'anthropic',
+        targetModel: 'qwen3.8-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/anthropic/v1/messages',
       },
     ],
   },
@@ -195,7 +219,7 @@ export function classifyAutoModel(prompt: string, hasImageAttachment: boolean): 
   if (/\b(prove|math|theorem|logic|step by step|analyze|architecture|benchmark)\b/.test(lower)) {
     return 'glm-5.3-flash';
   }
-  return 'gemini-3.8-flash';
+  return 'glm-5.3-flash';
 }
 
 export function resolveModelRoute(

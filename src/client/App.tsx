@@ -23,6 +23,7 @@ import {
   setSessionAuthenticated,
 } from './lib/storage';
 import { streamChatCompletion } from './lib/sseClient';
+import { getApiBaseUrl } from './lib/apiConfig';
 import { Sidebar } from './components/Sidebar';
 import { HeroLanding } from './components/HeroLanding';
 import { AntigravityComposer } from './components/AntigravityComposer';
@@ -48,8 +49,31 @@ export const App: React.FC = () => {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    saveThreads(threads);
-  }, [threads]);
+    if (!isStreaming) {
+      saveThreads(threads);
+      return;
+    }
+    const timer = setTimeout(() => {
+      saveThreads(threads);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [threads, isStreaming]);
+
+  useEffect(() => {
+    const pingBackend = () => {
+      const base = getApiBaseUrl();
+      fetch(`${base}/api/health`, { method: 'GET', keepalive: true }).catch(() => {
+        // Ignore background warmup errors
+      });
+    };
+    pingBackend();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        pingBackend();
+      }
+    }, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
