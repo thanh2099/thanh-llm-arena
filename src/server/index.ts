@@ -19,4 +19,12 @@ app.use(
 const port = Number(process.env.PORT ?? 3001);
 app.listen(port, '0.0.0.0', () => {
   console.log(`[ThanhLLM Proxy] Listening on http://0.0.0.0:${port}`);
+  const externalUrl = process.env.RENDER_EXTERNAL_URL;
+  if (externalUrl) {
+    setInterval(() => {
+      fetch(`${externalUrl.replace(/\/+$/, '')}/api/health`).catch(() => {
+        // Ignore self-ping errors
+      });
+    }, 12 * 60 * 1000);
+  }
 });

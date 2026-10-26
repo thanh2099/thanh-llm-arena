@@ -16,7 +16,7 @@ export interface FailoverExecutionOptions {
   firstTokenTimeoutMs?: number;
 }
 
-const ENDPOINT_COOLDOWN_MS = 60_000;
+const ENDPOINT_COOLDOWN_MS = 10 * 60_000;
 const endpointCooldownUntil = new Map<string, number>();
 
 function specKey(spec: ProviderEndpointSpec): string {
@@ -83,7 +83,7 @@ export async function executeChatWithFailover(
     let receivedFirstDelta = false;
 
     if (hasFallback) {
-      const timeoutMs = options?.firstTokenTimeoutMs ?? 3500;
+      const timeoutMs = options?.firstTokenTimeoutMs ?? 2800;
       firstTokenTimer = setTimeout(() => {
         if (!receivedFirstDelta) {
           localAbortedDueToTimeout = true;
