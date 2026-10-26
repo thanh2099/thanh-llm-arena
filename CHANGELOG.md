@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-10-26
+
+### Added
+- **24/7 Render Self-Keep-Alive (`20b5a2f`):** Automatically pings `RENDER_EXTERNAL_URL/api/health` every 12 minutes so free-tier Render containers stay warm 24/7.
+- **Browser Preconnect & Page-Load Warmup (`9579134`):** Added `<link rel="preconnect">` and `<link rel="dns-prefetch">` in `index.html`, a `<1ms` `GET /api/health` route, and automatic background warmup pings on page mount + every 4 minutes while the tab is open.
+- **10-Minute Endpoint Circuit Breaker (`9579134`, `20b5a2f`):** Tracks failing or timed-out upstream endpoints in memory for 10 minutes so subsequent messages skip unhealthy primaries with `0ms` wasted wait.
+
+### Changed
+- **Faster First-Token Failover (`20b5a2f`):** Tightened default first-token timeout from `6.0s` to `2.8s`.
+- **Smart Router & Model Targets (`9579134`):** Updated `space-bunny` primary target to `minimax-m3.1-flash-free` (replacing deprecated ID), routed general `Auto` prompts directly to `glm-5.3-flash` (`~680ms` TTFT), and added OpenCode Go secondary fallbacks across models.
+- **Debounced Thread Storage (`9579134`):** Debounced `localStorage` thread writes to `400ms` during active streaming to prevent main-thread UI stalls.
+
+---
+
 ## [1.4.0] - 2026-10-18
 
 ### Added

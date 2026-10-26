@@ -1,0 +1,189 @@
+================================================================================
+THANH'S LLM ARENA — COMPLETE REVISION & CHANGE LOG
+Repository: https://github.com/thanh2099/thanh-llm-arena
+Production Backend: https://thanh-llm-arena.onrender.com
+================================================================================
+
+--------------------------------------------------------------------------------
+VERSION 1.5.0 — Latency, Cold-Start & Streaming Performance Optimization
+Date: 2026-10-26
+Revisions: 20b5a2f, 9579134
+--------------------------------------------------------------------------------
+[Revision 20b5a2f | 2026-10-26]
+- Added automatic 24/7 Render self-keepalive heartbeat in src/server/index.ts
+  that pings RENDER_EXTERNAL_URL/api/health every 12 minutes to prevent
+  Render free-tier containers from sleeping.
+- Extended the upstream endpoint circuit-breaker cooldown duration to 10 minutes
+  (600,000ms) and tightened first-token failover timeout to 2.8 seconds.
+
+[Revision 9579134 | 2026-10-26]
+- Added <link rel="preconnect"> and <link rel="dns-prefetch"> in index.html for
+  https://thanh-llm-arena.onrender.com to eliminate DNS + TLS handshake latency.
+- Added ultra-fast GET /api/health endpoint (<1ms response) in
+  src/server/routes/chat.ts.
+- Added automatic client-side backend pre-warming on page load and 4-minute
+  keep-alive pings while the tab is visible in src/client/App.tsx.
+- Implemented in-memory Endpoint Circuit Breaker in src/server/routes/chat.ts
+  to bypass failed or timed-out upstream endpoints on subsequent requests with
+  0ms wasted delay.
+- Updated Space Bunny primary OpenCode Go target model to minimax-m3.1-flash-free
+  (replacing deprecated space-bunny model ID that returned HTTP 410).
+- Updated Auto smart router (classifyAutoModel) to route general text queries
+  directly to GLM-5.3-Flash on OpenCode Go (~680ms TTFT) and added OpenCode Go
+  secondary fallbacks across models.
+- Debounced localStorage thread serialization (saveThreads) to 400ms during
+  active token streaming in src/client/App.tsx to prevent main-thread UI blocking.
+
+--------------------------------------------------------------------------------
+VERSION 1.4.2 — OpenCode Go API Key Rotation & Live Verification
+Date: 2026-10-20 to 2026-10-23
+Revision: Environment Configuration Update (.env & Render Environment)
+--------------------------------------------------------------------------------
+[2026-10-23]
+- Verified live production Render deployment with rotated OpenCode Go API key
+  across GLM-5.3-Flash, Beam Free, and Qwen 3.8 Flash (HTTP 200 OK streaming).
+
+[2026-10-20]
+- Rotated OPENCODE_GO_API_KEY in local .env and Render production environment.
+
+--------------------------------------------------------------------------------
+VERSION 1.4.1 — Master Replication Blueprint & Documentation
+Date: 2026-10-17
+Revision: b09357a
+--------------------------------------------------------------------------------
+[Revision b09357a | 2026-10-17]
+- Created promptUsed.html (and public/promptUsed.html) containing the full
+  system architecture, color tokens, layout dimensions, streaming protocol
+  specs, security rules, and deployment blueprint.
+- Implemented Light Mode / Dark Mode theme toggle, word-wrapped zero-horizontal-
+  scroll layout, and 1-click Copy Full Prompt button in promptUsed.html.
+- Created initial CHANGELOG.md following Keep a Changelog format.
+
+--------------------------------------------------------------------------------
+VERSION 1.4.0 — Mobile Responsive Overhaul & Markdown List Spacing Fix
+Date: 2026-10-17
+Revisions: 7cf47a7, 5f8b56f
+--------------------------------------------------------------------------------
+[Revision 7cf47a7 | 2026-10-17]
+- Redesigned layout for mobile viewports (<= 768px, Android & iOS):
+  * Converted desktop sidebar into an off-canvas slide-out drawer with backdrop
+    blur, defaulting to closed on mobile screens.
+  * Added hamburger menu button (☰) to CompanyTopBanner for mobile navigation.
+  * Added dynamic viewport height (100dvh) and safe-area-inset-bottom padding
+    so mobile browser address bars do not clip the bottom composer.
+  * Optimized top banner, hero cards, and composer toolbar for touch screens.
+
+[Revision 5f8b56f | 2026-10-17]
+- Fixed markdown ordered/unordered list clipping ("text spewing out to the left")
+  by adding padding-left: 28px, item gap: 7px, and margin: 10px 0 16px on
+  .turn-markdown-prose ol, ul.
+- Added 18px vertical margins for horizontal dividers (<hr>), styled headings,
+  blockquotes, and tables, and expanded .turn-row padding to 18px 24px.
+
+--------------------------------------------------------------------------------
+VERSION 1.3.0 — Dual-Cloud Production Deployment (Netlify + Render)
+Date: 2026-10-17
+Revisions: b220c38, 20617c8, dd1af0a, 85a8e0d
+--------------------------------------------------------------------------------
+[Revision b220c38 | 2026-10-17]
+- Created src/client/lib/apiConfig.ts to automatically route production client
+  requests directly to https://thanh-llm-arena.onrender.com when hosted on
+  Netlify, eliminating HTTP 404 stream errors.
+- Added public/_redirects fallback file for Netlify Drop compatibility.
+
+[Revision 20617c8 | 2026-10-17]
+- Configured /api/* proxy redirect rule in netlify.toml pointing to
+  https://thanh-llm-arena.onrender.com/api/:splat (status 200, force = true).
+
+[Revision dd1af0a | 2026-10-17]
+- Bound Express server to 0.0.0.0 in src/server/index.ts for Render cloud
+  compatibility.
+- Added "start": "tsx src/server/index.ts" script and moved tsx to production
+  dependencies in package.json.
+
+[Revision 85a8e0d | 2026-10-17]
+- Added initial netlify.toml configuration with build command "npm run build"
+  and publish directory "dist".
+
+--------------------------------------------------------------------------------
+VERSION 1.2.0 — Fixed Top Middle Company Banner & Enterprise Branding
+Date: 2026-10-17
+Revisions: 7910b93, 1ad3bab
+--------------------------------------------------------------------------------
+[Revision 7910b93 | 2026-10-17]
+- Created src/client/components/CompanyTopBanner.tsx mounted permanently at the
+  top middle of .workspace-main across both hero landing and active chat views.
+- Added generated enterprise banner assets (public/company-banner-header.png
+  and public/company-banner.jpg).
+- Surfaced live arena telemetry ("LIVE ARENA", "NET: OPENCODE · GEMINI ·
+  OPENROUTER"), centered "Thanh'S LLM Arena" brand identity, active model badge,
+  and admin lock button.
+- Removed duplicate inner hero banner from HeroLanding.tsx.
+
+[Revision 1ad3bab | 2026-10-17]
+- Created custom monogram SVG favicon (public/favicon.svg) and initial brand
+  banner (public/banner.jpg) for "Thanh'S LLM Arena".
+- Refined technical typography and widened composer layout.
+
+--------------------------------------------------------------------------------
+VERSION 1.1.0 — Admin Passkey Security (thanh2099) & Widescreen Layout
+Date: 2026-10-17
+Revision: d21202e
+--------------------------------------------------------------------------------
+[Revision d21202e | 2026-10-17]
+- Protected SettingsModal and backend GET /api/providers/status behind admin
+  passkey "thanh2099" (via x-admin-passkey header and sessionStorage state).
+- Added ability to hide the sidebar settings button and unlock via Ctrl+Shift+S
+  keyboard shortcut.
+- Widened chat thread and composer layout to max-width: min(94vw, 1500px).
+
+--------------------------------------------------------------------------------
+VERSION 1.0.0 — Initial Release: Arena.ai + Antigravity Direct Chat Clone
+Date: 2026-10-17
+Revisions: d9af17a, 34d93e2, 194a1a4, 2f99df2, e5548fe, 3a530a0, 8a0b8cf,
+           ac075c3, 212ee6d, b29b7e9, f9ea737, b5004b6
+--------------------------------------------------------------------------------
+[Revision d9af17a | 2026-10-17]
+- Added first-token timeout abort timer, empty-stream failover detection, and
+  live connecting status indicator ("Connecting to <Model>...").
+
+[Revision 34d93e2 | 2026-10-17]
+- Fixed Express 5 premature SSE close event handling and added clean failover
+  reason formatting (API_KEY_EXPIRED, HIGH_DEMAND, RATE_LIMITED, etc.).
+
+[Revision 194a1a4 | 2026-10-17]
+- Added syntax-styled code blocks with 1-click Copy button, provider health
+  status badges in SettingsModal, and assistant turn Retry button.
+
+[Revision 2f99df2 | 2026-10-17]
+- Built main App workspace, collapsible Sidebar with thread rename/delete,
+  MessageItem with collapsible "▸ THINKING TRACE" reasoning drawer, and
+  SettingsModal.
+
+[Revision e5548fe | 2026-10-17]
+- Built AntigravityComposer (multi-row input, image/text attachments, model
+  selector dropdown, provider routing pills) and HeroLanding with 6 starter
+  cards.
+
+[Revision 3a530a0 | 2026-10-17]
+- Implemented Technical Broadsheet Dark CSS theme (src/client/styles/theme.css),
+  localStorage persistence (storage.ts), and client SSE reader (sseClient.ts).
+
+[Revision 8a0b8cf | 2026-10-17]
+- Implemented multi-provider stream adapters (adapters.ts) and automatic
+  failover SSE route (chat.ts) with unit tests (tests/failover.test.ts).
+
+[Revision ac075c3 | 2026-10-17]
+- Implemented SSE stream parsers for OpenAI (reasoning_content + content),
+  Anthropic (thinking_delta + text_delta), and Gemini (thought parts + text)
+  with unit tests (tests/streamParsers.test.ts).
+
+[Revision 212ee6d | 2026-10-17]
+- Created 7-model catalog (auto, beam-free, deepseek-v4.1-flash, glm-5.3-flash,
+  space-bunny, gemini-3.8-flash, qwen3.8-flash) and smart heuristic router with
+  unit tests (tests/models.test.ts).
+
+[Revisions b29b7e9, f9ea737, b5004b6 | 2026-10-17]
+- Authored design specification, implementation plan, and scaffolded TypeScript
+  + Vite + Express + Vitest project structure.
+================================================================================
