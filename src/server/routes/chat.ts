@@ -43,7 +43,9 @@ export async function executeChatWithFailover(
 ): Promise<void> {
   const startTime = Date.now();
   const lastMsg = payload.messages[payload.messages.length - 1];
-  const hasImages = (lastMsg?.attachments ?? []).some((a) => a.kind === 'image');
+  const hasImages = payload.messages.some((m) =>
+    (m.attachments ?? []).some((a) => a.kind === 'image')
+  );
   const route = resolveModelRoute(
     payload.modelId,
     lastMsg?.content ?? '',
@@ -81,9 +83,9 @@ export async function executeChatWithFailover(
 
     let firstTokenTimer: NodeJS.Timeout | null = null;
     let receivedFirstDelta = false;
+    const timeoutMs = options?.firstTokenTimeoutMs ?? (hasImages ? 12000 : 2800);
 
     if (hasFallback) {
-      const timeoutMs = options?.firstTokenTimeoutMs ?? 2800;
       firstTokenTimer = setTimeout(() => {
         if (!receivedFirstDelta) {
           localAbortedDueToTimeout = true;
@@ -129,7 +131,7 @@ export async function executeChatWithFailover(
         endpointCooldownUntil.set(specKey(spec), Date.now() + ENDPOINT_COOLDOWN_MS);
       }
       const msg = localAbortedDueToTimeout
-        ? `First token timeout (${((options?.firstTokenTimeoutMs ?? 3500) / 1000).toFixed(1)}s)`
+        ? `First token timeout (${(timeoutMs / 1000).toFixed(1)}s)`
         : err instanceof Error
         ? err.message
         : String(err);

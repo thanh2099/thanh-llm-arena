@@ -17,6 +17,80 @@ export interface AntigravityComposerProps {
   onStop: () => void;
 }
 
+const IMAGE_EXT_REGEX = /\.(png|jpe?g|gif|webp|bmp|svg|ico|avif)$/i;
+const SUPPORTED_VISION_MIMES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function normalizeImageFile(file: File): Promise<{ dataUrl: string; mimeType: string }> {
+  const rawDataUrl = await readFileAsDataUrl(file);
+  const rawMime = (file.type || 'image/png').toLowerCase();
+
+  if (typeof document === 'undefined' || typeof Image === 'undefined') {
+    return { dataUrl: rawDataUrl, mimeType: SUPPORTED_VISION_MIMES.has(rawMime) ? rawMime : 'image/png' };
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth || img.width || 64;
+      const h = img.naturalHeight || img.height || 64;
+      const MAX_DIM = 2048;
+      const MIN_DIM = 32;
+
+      const needsDownscale = w > MAX_DIM || h > MAX_DIM;
+      const needsUpscale = w < 16 || h < 16;
+      const needsReencode =
+        !SUPPORTED_VISION_MIMES.has(rawMime) || file.size > 1.5 * 1024 * 1024;
+
+      if (!needsDownscale && !needsUpscale && !needsReencode) {
+        resolve({ dataUrl: rawDataUrl, mimeType: rawMime });
+        return;
+      }
+
+      let targetW = w;
+      let targetH = h;
+      if (needsDownscale) {
+        const scale = Math.min(MAX_DIM / w, MAX_DIM / h);
+        targetW = Math.max(MIN_DIM, Math.round(w * scale));
+        targetH = Math.max(MIN_DIM, Math.round(h * scale));
+      } else if (needsUpscale) {
+        const scale = Math.max(MIN_DIM / Math.max(w, 1), MIN_DIM / Math.max(h, 1));
+        targetW = Math.round(w * scale);
+        targetH = Math.round(h * scale);
+      }
+
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve({ dataUrl: rawDataUrl, mimeType: SUPPORTED_VISION_MIMES.has(rawMime) ? rawMime : 'image/png' });
+          return;
+        }
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        const outMime = rawMime === 'image/png' && file.size <= 1.5 * 1024 * 1024 ? 'image/png' : 'image/jpeg';
+        const outDataUrl = canvas.toDataURL(outMime, 0.88);
+        resolve({ dataUrl: outDataUrl, mimeType: outMime });
+      } catch {
+        resolve({ dataUrl: rawDataUrl, mimeType: SUPPORTED_VISION_MIMES.has(rawMime) ? rawMime : 'image/png' });
+      }
+    };
+    img.onerror = () => {
+      resolve({ dataUrl: rawDataUrl, mimeType: SUPPORTED_VISION_MIMES.has(rawMime) ? rawMime : 'image/png' });
+    };
+    img.src = rawDataUrl;
+  });
+}
+
 export const AntigravityComposer: React.FC<AntigravityComposerProps> = ({
   value,
   onChange,
@@ -42,18 +116,14 @@ export const AntigravityComposer: React.FC<AntigravityComposerProps> = ({
 
     const next: Attachment[] = [...attachments];
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) continue;
-      const isImage = file.type.startsWith('image/');
+      if (file.size > 25 * 1024 * 1024) continue;
+      const isImage = file.type.startsWith('image/') || IMAGE_EXT_REGEX.test(file.name);
       if (isImage) {
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result ?? ''));
-          reader.readAsDataURL(file);
-        });
+        const { dataUrl, mimeType } = await normalizeImageFile(file);
         next.push({
           id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           name: file.name || `pasted-image-${Date.now()}.png`,
-          mimeType: file.type || 'image/png',
+          mimeType,
           size: file.size,
           kind: 'image',
           dataUrl,
@@ -119,11 +189,12 @@ export const AntigravityComposer: React.FC<AntigravityComposerProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onPaste={(e) => {
-          const items = Array.from(e.clipboardData?.items ?? []);
-          const files = items
+          const itemFiles = Array.from(e.clipboardData?.items ?? [])
             .filter((item) => item.kind === 'file')
             .map((item) => item.getAsFile())
             .filter((f): f is File => f !== null);
+          const directFiles = Array.from(e.clipboardData?.files ?? []);
+          const files = itemFiles.length > 0 ? itemFiles : directFiles;
           if (files.length > 0) {
             e.preventDefault();
             void handleFiles(files);

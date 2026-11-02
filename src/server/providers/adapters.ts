@@ -15,11 +15,49 @@ export interface InputMessage {
 
 function buildContentWithTextAttachments(msg: InputMessage): string {
   const textFiles = (msg.attachments ?? []).filter((a) => a.kind === 'text' && a.textContent);
-  if (textFiles.length === 0) return msg.content;
-  const blocks = textFiles
-    .map((f) => `--- FILE: ${f.name} ---\n${f.textContent}\n--- END FILE ---`)
-    .join('\n\n');
-  return `${blocks}\n\n${msg.content}`;
+  const baseText =
+    textFiles.length === 0
+      ? msg.content
+      : `${textFiles
+          .map((f) => `--- FILE: ${f.name} ---\n${f.textContent}\n--- END FILE ---`)
+          .join('\n\n')}\n\n${msg.content}`;
+
+  const hasImages = (msg.attachments ?? []).some((a) => a.kind === 'image' && Boolean(a.dataUrl));
+  if (!baseText.trim() && hasImages) {
+    return 'Describe and analyze this image.';
+  }
+  return baseText;
+}
+
+interface ParsedImageAttachment {
+  mimeType: string;
+  base64: string;
+  dataUrl: string;
+}
+
+function parseImageAttachment(att: Attachment): ParsedImageAttachment | null {
+  if (att.kind !== 'image' || !att.dataUrl) return null;
+  const trimmed = att.dataUrl.trim();
+  const match = trimmed.match(/^data:([^;,]+);base64,(.+)$/s);
+  if (match) {
+    const mimeType = (match[1] || att.mimeType || 'image/png').trim();
+    const base64 = match[2].replace(/\s/g, '');
+    if (!base64) return null;
+    return {
+      mimeType,
+      base64,
+      dataUrl: `data:${mimeType};base64,${base64}`,
+    };
+  }
+  const commaIdx = trimmed.indexOf(',');
+  const rawBase64 = (commaIdx !== -1 ? trimmed.slice(commaIdx + 1) : trimmed).replace(/\s/g, '');
+  if (!rawBase64) return null;
+  const mimeType = (att.mimeType || 'image/png').trim();
+  return {
+    mimeType,
+    base64: rawBase64,
+    dataUrl: `data:${mimeType};base64,${rawBase64}`,
+  };
 }
 
 export async function invokeProviderStream(
@@ -34,9 +72,9 @@ export async function invokeProviderStream(
     const contents = messages.map((m) => {
       const parts: Array<Record<string, unknown>> = [];
       for (const att of m.attachments ?? []) {
-        if (att.kind === 'image' && att.dataUrl) {
-          const base64 = att.dataUrl.split(',')[1] ?? '';
-          parts.push({ inlineData: { mimeType: att.mimeType, data: base64 } });
+        const parsed = parseImageAttachment(att);
+        if (parsed) {
+          parts.push({ inlineData: { mimeType: parsed.mimeType, data: parsed.base64 } });
         }
       }
       parts.push({ text: buildContentWithTextAttachments(m) });
@@ -59,10 +97,32 @@ export async function invokeProviderStream(
   }
 
   if (spec.protocol === 'anthropic') {
-    const formatted = messages.map((m) => ({
-      role: m.role,
-      content: buildContentWithTextAttachments(m),
-    }));
+    const formatted = messages.map((m) => {
+      const images = (m.attachments ?? [])
+        .map(parseImageAttachment)
+        .filter((img): img is ParsedImageAttachment => img !== null);
+      const textBody = buildContentWithTextAttachments(m);
+      if (images.length > 0 && m.role === 'user') {
+        return {
+          role: m.role,
+          content: [
+            ...images.map((img) => ({
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: img.mimeType,
+                data: img.base64,
+              },
+            })),
+            { type: 'text', text: textBody },
+          ],
+        };
+      }
+      return {
+        role: m.role,
+        content: textBody,
+      };
+    });
     const res = await fetch(spec.endpointUrl, {
       method: 'POST',
       headers: {
@@ -102,7 +162,9 @@ export async function invokeProviderStream(
   }
 
   const oaMessages = messages.map((m) => {
-    const images = (m.attachments ?? []).filter((a) => a.kind === 'image' && a.dataUrl);
+    const images = (m.attachments ?? [])
+      .map(parseImageAttachment)
+      .filter((img): img is ParsedImageAttachment => img !== null);
     const textBody = buildContentWithTextAttachments(m);
     if (images.length > 0 && m.role === 'user') {
       return {

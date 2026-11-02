@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { executeChatWithFailover } from '../src/server/routes/chat';
+import { invokeProviderStream } from '../src/server/providers/adapters';
 import type { SSEEvent } from '../src/shared/types';
 
 describe('Automatic Provider Failover', () => {
@@ -101,5 +102,60 @@ describe('Automatic Provider Failover', () => {
       )
     ).toBe(true);
     expect(emitted.some((e) => e.type === 'text' && e.delta === 'Recovered from empty stream')).toBe(true);
+  });
+
+  it('serializes base64 image blocks for Anthropic protocol endpoints (e.g. qwen3.8-flash)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementationOnce(async () => {
+      const sseBody = 'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"Red square"}}\n\n';
+      return new Response(sseBody, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+    });
+
+    const deltas: Array<{ type: string; delta: string }> = [];
+    await invokeProviderStream(
+      {
+        provider: 'opencode-go',
+        protocol: 'anthropic',
+        targetModel: 'qwen3.8-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/anthropic/v1/messages',
+      },
+      [
+        {
+          role: 'user',
+          content: '',
+          attachments: [
+            {
+              id: 'att_1',
+              name: 'test.png',
+              mimeType: 'image/png',
+              size: 128,
+              kind: 'image',
+              dataUrl: 'data:image/png;base64,QUJDRA==',
+            },
+          ],
+        },
+      ],
+      { opencodeGo: 'key', gemini: 'key', openrouter: 'key' },
+      (d) => deltas.push(d)
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, init] = fetchSpy.mock.calls[0];
+    const parsedBody = JSON.parse(String(init?.body ?? '{}'));
+    expect(parsedBody.messages[0].content).toEqual([
+      {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/png',
+          data: 'QUJDRA==',
+        },
+      },
+      {
+        type: 'text',
+        text: 'Describe and analyze this image.',
+      },
+    ]);
+    expect(deltas).toEqual([{ type: 'text', delta: 'Red square' }]);
+    fetchSpy.mockRestore();
   });
 });

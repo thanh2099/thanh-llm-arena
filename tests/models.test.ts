@@ -47,4 +47,9 @@ describe('Model Catalog & Smart Router', () => {
     expect(route.primary.targetModel).toBe('reflection/beam-1.0-501b-a23b');
     expect(route.fallbacks).toHaveLength(0);
   });
+
+  it('reroutes non-vision models to gemini-3.8-flash when an image attachment is present', () => {
+    const route = resolveModelRoute('beam-free', 'What is in this image?', true, 'auto');
+    expect(route.resolvedModelId).toBe('gemini-3.8-flash');
+  });
 });

@@ -173,6 +173,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         targetModel: 'qwen3.8-flash',
         endpointUrl: 'https://opencode.ai/inference/go/anthropic/v1/messages',
       },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
+      },
     ],
   },
   {
@@ -194,6 +200,12 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
         protocol: 'openai',
         targetModel: 'qwen/qwen3.8-flash',
         endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
       },
     ],
   },
@@ -228,10 +240,14 @@ export function resolveModelRoute(
   hasImageAttachment: boolean,
   providerOverride: ProviderOverride = 'auto'
 ): ResolvedModelRoute {
-  const targetId: Exclude<ModelId, 'auto'> =
+  let targetId: Exclude<ModelId, 'auto'> =
     modelId === 'auto' ? classifyAutoModel(promptText, hasImageAttachment) : modelId;
 
-  const entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? MODEL_CATALOG[5];
+  let entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? MODEL_CATALOG[5];
+  if (hasImageAttachment && !entry.supportsVision) {
+    targetId = 'gemini-3.8-flash';
+    entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? MODEL_CATALOG[5];
+  }
   const allSpecs = [entry.primary, ...entry.fallbacks];
 
   if (providerOverride !== 'auto') {
