@@ -24,6 +24,7 @@ import {
 } from './lib/storage';
 import { streamChatCompletion } from './lib/sseClient';
 import { getApiBaseUrl } from './lib/apiConfig';
+import { exportFullThread } from './lib/exporter';
 import { Sidebar } from './components/Sidebar';
 import { HeroLanding } from './components/HeroLanding';
 import { AntigravityComposer } from './components/AntigravityComposer';
@@ -339,15 +340,53 @@ export const App: React.FC = () => {
         ) : (
           <div className="active-thread-layout">
             <div className="thread-scroll-region">
-              {activeThread.messages.map((msg, idx) => (
-                <MessageItem
-                  key={msg.id}
-                  message={msg}
-                  isStreaming={isStreaming && idx === activeThread.messages.length - 1}
-                  onRetry={msg.role === 'assistant' ? () => handleRetryMessage(msg.id) : undefined}
-                  onOpenSettings={() => setSettingsOpen(true)}
-                />
-              ))}
+              <div className="thread-export-bar">
+                <span className="thread-export-title" title={activeThread.title}>
+                  THREAD // {activeThread.title}
+                </span>
+                <div className="thread-export-actions">
+                  <button
+                    type="button"
+                    className="turn-action-btn"
+                    disabled={isStreaming}
+                    title="Export full conversation &amp; thoughts as Plain Text (.txt)"
+                    onClick={() => exportFullThread('txt', activeThread)}
+                  >
+                    [EXPORT THREAD .TXT]
+                  </button>
+                  <button
+                    type="button"
+                    className="turn-action-btn turn-action-btn-accent"
+                    disabled={isStreaming}
+                    title="Export full conversation &amp; thoughts as Clean HTML Layout (.html)"
+                    onClick={() => exportFullThread('html', activeThread)}
+                  >
+                    [EXPORT THREAD .HTML]
+                  </button>
+                </div>
+              </div>
+              {activeThread.messages.map((msg, idx) => {
+                let prevUserMsg: ChatMessage | undefined;
+                if (msg.role === 'assistant') {
+                  for (let i = idx - 1; i >= 0; i--) {
+                    if (activeThread.messages[i].role === 'user') {
+                      prevUserMsg = activeThread.messages[i];
+                      break;
+                    }
+                  }
+                }
+                return (
+                  <MessageItem
+                    key={msg.id}
+                    message={msg}
+                    userPromptMessage={prevUserMsg}
+                    threadTitle={activeThread.title}
+                    isStreaming={isStreaming && idx === activeThread.messages.length - 1}
+                    onRetry={msg.role === 'assistant' ? () => handleRetryMessage(msg.id) : undefined}
+                    onOpenSettings={() => setSettingsOpen(true)}
+                  />
+                );
+              })}
             </div>
             <div className="docked-composer-bar">{composerElement}</div>
           </div>

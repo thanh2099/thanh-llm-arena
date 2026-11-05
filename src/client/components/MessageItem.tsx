@@ -2,9 +2,12 @@
 import React, { useMemo, useState } from 'react';
 import { Marked } from 'marked';
 import type { ChatMessage } from '../../shared/types';
+import { buildTurnPlainText, exportSingleTurn } from '../lib/exporter';
 
 export interface MessageItemProps {
   message: ChatMessage;
+  userPromptMessage?: ChatMessage;
+  threadTitle?: string;
   isStreaming?: boolean;
   onRetry?: () => void;
   onOpenSettings?: () => void;
@@ -36,11 +39,14 @@ const customMarked = new Marked({
 
 export const MessageItem: React.FC<MessageItemProps> = ({
   message,
+  userPromptMessage,
+  threadTitle,
   isStreaming = false,
   onRetry,
   onOpenSettings,
 }) => {
   const [reasoningOpen, setReasoningOpen] = useState(true);
+  const [copiedTurn, setCopiedTurn] = useState(false);
 
   const html = useMemo(() => {
     if (message.role === 'user' || !message.content) return '';
@@ -105,6 +111,39 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               </button>
             )}
           </span>
+        )}
+        {!isStreaming && (message.content || message.reasoning) && (
+          <div className="turn-actions-group">
+            <button
+              type="button"
+              className="turn-action-btn"
+              title="Copy thoughts &amp; output as plain text"
+              onClick={() => {
+                const txt = buildTurnPlainText(message, userPromptMessage, threadTitle);
+                navigator.clipboard?.writeText(txt).catch(() => {});
+                setCopiedTurn(true);
+                setTimeout(() => setCopiedTurn(false), 1500);
+              }}
+            >
+              {copiedTurn ? '[COPIED]' : '[COPY]'}
+            </button>
+            <button
+              type="button"
+              className="turn-action-btn"
+              title="Save model output &amp; reasoning as Plain Text (.txt)"
+              onClick={() => exportSingleTurn('txt', message, userPromptMessage, threadTitle)}
+            >
+              [SAVE .TXT]
+            </button>
+            <button
+              type="button"
+              className="turn-action-btn turn-action-btn-accent"
+              title="Save model output &amp; reasoning as Clean HTML Layout (.html)"
+              onClick={() => exportSingleTurn('html', message, userPromptMessage, threadTitle)}
+            >
+              [SAVE .HTML]
+            </button>
+          </div>
         )}
       </div>
 
