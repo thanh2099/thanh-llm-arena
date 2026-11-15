@@ -6,7 +6,8 @@ export type ModelId =
   | 'space-bunny'
   | 'gemini-3.8-flash'
   | 'qwen3.8-flash'
-  | 'gemini-4-hydrogen';
+  | 'gemini-4-hydrogen'
+  | 'kimi-k3';
 
 export type ProviderId = 'opencode-go' | 'gemini' | 'openrouter';
 export type ProviderOverride = 'auto' | ProviderId;

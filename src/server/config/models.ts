@@ -237,6 +237,28 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
       },
     ],
   },
+  {
+    id: 'kimi-k3',
+    name: 'Kimi K3',
+    badge: 'REASONING',
+    description: 'Moonshot AI Kimi K3 reasoning and coding model via OpenRouter',
+    supportsVision: true,
+    supportsReasoning: true,
+    primary: {
+      provider: 'openrouter',
+      protocol: 'openai',
+      targetModel: 'moonshotai/kimi-k3',
+      endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    },
+    fallbacks: [
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
+      },
+    ],
+  },
 ];
 
 export interface ResolvedModelRoute {

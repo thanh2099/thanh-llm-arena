@@ -13,6 +13,7 @@ describe('Model Catalog & Smart Router', () => {
       'gemini-3.8-flash',
       'qwen3.8-flash',
       'gemini-4-hydrogen',
+      'kimi-k3',
     ]);
   });
 
