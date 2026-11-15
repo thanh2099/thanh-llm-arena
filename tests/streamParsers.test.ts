@@ -16,6 +16,23 @@ describe('Multi-Protocol Stream Parsers', () => {
       JSON.stringify({ choices: [{ delta: { content: 'Hello world' } }] })
     );
     expect(r2).toEqual([{ type: 'text', delta: 'Hello world' }]);
+
+    const r3 = parseOpenAISSEData(
+      JSON.stringify({
+        choices: [
+          {
+            delta: {
+              reasoning_details: [{ type: 'reasoning.text', text: 'Thinking step' }],
+              content: 'Result',
+            },
+          },
+        ],
+      })
+    );
+    expect(r3).toEqual([
+      { type: 'reasoning', delta: 'Thinking step' },
+      { type: 'text', delta: 'Result' },
+    ]);
   });
 
   it('parses Anthropic thinking_delta and text_delta', () => {

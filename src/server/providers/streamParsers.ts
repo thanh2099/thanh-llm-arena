@@ -10,7 +10,13 @@ export function parseOpenAISSEData(rawData: string): ParsedDelta[] {
     const delta = json?.choices?.[0]?.delta;
     if (!delta) return [];
     const out: ParsedDelta[] = [];
-    const reasoning = delta.reasoning_content ?? delta.reasoning;
+    let reasoning = delta.reasoning_content ?? delta.reasoning;
+    if ((typeof reasoning !== 'string' || !reasoning) && Array.isArray(delta.reasoning_details)) {
+      reasoning = delta.reasoning_details
+        .filter((r: { type?: string; text?: string }) => r?.type === 'reasoning.text' && typeof r.text === 'string')
+        .map((r: { text: string }) => r.text)
+        .join('');
+    }
     if (typeof reasoning === 'string' && reasoning.length > 0) {
       out.push({ type: 'reasoning', delta: reasoning });
     }

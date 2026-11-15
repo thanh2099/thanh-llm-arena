@@ -5,7 +5,8 @@ export type ModelId =
   | 'glm-5.3-flash'
   | 'space-bunny'
   | 'gemini-3.8-flash'
-  | 'qwen3.8-flash';
+  | 'qwen3.8-flash'
+  | 'gemini-4-hydrogen';
 
 export type ProviderId = 'opencode-go' | 'gemini' | 'openrouter';
 export type ProviderOverride = 'auto' | ProviderId;

@@ -209,6 +209,34 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
       },
     ],
   },
+  {
+    id: 'gemini-4-hydrogen',
+    name: 'Gemini 4 Hydrogen',
+    badge: 'REASONING',
+    description: 'Next-gen Google reasoning model via OpenRouter with thinking traces',
+    supportsVision: true,
+    supportsReasoning: true,
+    primary: {
+      provider: 'openrouter',
+      protocol: 'openai',
+      targetModel: 'google/gemini-4-hydrogen',
+      endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    },
+    fallbacks: [
+      {
+        provider: 'gemini',
+        protocol: 'gemini',
+        targetModel: 'gemini-3.8-flash',
+        endpointUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent',
+      },
+      {
+        provider: 'opencode-go',
+        protocol: 'openai',
+        targetModel: 'glm-5.3-flash',
+        endpointUrl: 'https://opencode.ai/inference/go/openai/v1/chat/completions',
+      },
+    ],
+  },
 ];
 
 export interface ResolvedModelRoute {

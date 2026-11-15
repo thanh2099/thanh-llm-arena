@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MODEL_CATALOG, resolveModelRoute } from '../src/server/config/models';
 
 describe('Model Catalog & Smart Router', () => {
-  it('lists all 6 target models plus auto', () => {
+  it('lists all target models plus auto', () => {
     const ids = MODEL_CATALOG.map((m) => m.id);
     expect(ids).toEqual([
       'auto',
@@ -12,6 +12,7 @@ describe('Model Catalog & Smart Router', () => {
       'space-bunny',
       'gemini-3.8-flash',
       'qwen3.8-flash',
+      'gemini-4-hydrogen',
     ]);
   });
 
@@ -51,5 +52,12 @@ describe('Model Catalog & Smart Router', () => {
   it('reroutes non-vision models to gemini-3.8-flash when an image attachment is present', () => {
     const route = resolveModelRoute('beam-free', 'What is in this image?', true, 'auto');
     expect(route.resolvedModelId).toBe('gemini-3.8-flash');
+  });
+
+  it('routes gemini-4-hydrogen directly to OpenRouter target model', () => {
+    const route = resolveModelRoute('gemini-4-hydrogen', 'Hello', false, 'auto');
+    expect(route.resolvedModelId).toBe('gemini-4-hydrogen');
+    expect(route.primary.provider).toBe('openrouter');
+    expect(route.primary.targetModel).toBe('google/gemini-4-hydrogen');
   });
 });

@@ -1,5 +1,6 @@
 // src/client/components/CompanyTopBanner.tsx
 import React from 'react';
+import { MODEL_CATALOG } from '../../server/config/models';
 
 export interface CompanyTopBannerProps {
   onOpenSettings: () => void;
@@ -54,7 +55,7 @@ export const CompanyTopBanner: React.FC<CompanyTopBannerProps> = ({
         <div className="top-banner-right">
           <div className="top-banner-model-pill">
             <span className="telemetry-dim">MODELS:</span>
-            <span className="telemetry-val">6 ACTIVE + AUTO</span>
+            <span className="telemetry-val">{MODEL_CATALOG.length - 1} ACTIVE + AUTO</span>
           </div>
           <button
             type="button"
