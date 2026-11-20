@@ -83,7 +83,9 @@ export async function executeChatWithFailover(
 
     let firstTokenTimer: NodeJS.Timeout | null = null;
     let receivedFirstDelta = false;
-    const timeoutMs = options?.firstTokenTimeoutMs ?? (hasImages ? 12000 : 2800);
+    const timeoutMs =
+      options?.firstTokenTimeoutMs ??
+      (spec.protocol === 'openrouter-image' ? 45000 : hasImages ? 12000 : 2800);
 
     if (hasFallback) {
       firstTokenTimer = setTimeout(() => {

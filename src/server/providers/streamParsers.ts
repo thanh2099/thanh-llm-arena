@@ -1,6 +1,7 @@
 export type ParsedDelta =
   | { type: 'reasoning'; delta: string }
-  | { type: 'text'; delta: string };
+  | { type: 'text'; delta: string }
+  | { type: 'image'; dataUrl: string; alt?: string };
 
 export function parseOpenAISSEData(rawData: string): ParsedDelta[] {
   const trimmed = rawData.trim();

@@ -112,7 +112,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             )}
           </span>
         )}
-        {!isStreaming && (message.content || message.reasoning) && (
+        {!isStreaming && (message.content || message.reasoning || (message.generatedImages && message.generatedImages.length > 0)) && (
           <div className="turn-actions-group">
             <button
               type="button"
@@ -161,6 +161,56 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       )}
 
+      {message.generatedImages && message.generatedImages.length > 0 && (
+        <div className="generated-images-grid">
+          {message.generatedImages.map((img, idx) => {
+            const mimeMatch = img.dataUrl.match(/^data:image\/([a-zA-Z0-9+.-]+);/);
+            const rawExt = (mimeMatch?.[1] || 'png').toLowerCase();
+            const ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
+            const filename = `thanh-llm-arena-image-${idx + 1}-${Date.now()}.${ext}`;
+            return (
+              <div key={`${message.id}_img_${idx}`} className="generated-image-card">
+                <img
+                  src={img.dataUrl}
+                  alt={img.alt || 'Generated image'}
+                  className="generated-image-preview"
+                />
+                <div className="generated-image-bar">
+                  <span className="generated-image-label">
+                    [GENERATED IMAGE #{idx + 1} · {ext.toUpperCase()}]
+                  </span>
+                  <div className="generated-image-actions">
+                    <a
+                      href={img.dataUrl}
+                      download={filename}
+                      className="turn-action-btn turn-action-btn-accent"
+                      title="Download generated image"
+                    >
+                      [DOWNLOAD .{ext.toUpperCase()}]
+                    </a>
+                    <button
+                      type="button"
+                      className="turn-action-btn"
+                      title="Open image in new tab"
+                      onClick={() => {
+                        const win = window.open();
+                        if (win) {
+                          win.document.write(
+                            `<body style="margin:0;background:#09090b;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${img.dataUrl}" style="max-width:100%;max-height:100vh;object-fit:contain;" /></body>`
+                          );
+                        }
+                      }}
+                    >
+                      [OPEN]
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {message.error ? (
         <div className="turn-error-box">
           <div className="turn-error-title">[STREAM ERROR] {message.error}</div>
@@ -184,7 +234,11 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           ) : (
             <div className="turn-connecting">
               <span className="connecting-dot">●</span>
-              <span>Connecting to {message.resolvedModelName || message.modelId || 'provider'}...</span>
+              <span>
+                {message.modelId === 'gemini-image' || /image/i.test(message.resolvedModelName || '')
+                  ? `Generating image with ${message.resolvedModelName || 'Gemini 3.1 Image Gen'}...`
+                  : `Connecting to ${message.resolvedModelName || message.modelId || 'provider'}...`}
+              </span>
               <span className="streaming-cursor">▋</span>
             </div>
           )}
@@ -195,7 +249,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           onClick={handleProseClick}
           dangerouslySetInnerHTML={{ __html: html }}
         />
-      ) : message.reasoning ? (
+      ) : message.generatedImages && message.generatedImages.length > 0 ? null : message.reasoning ? (
         <div className="turn-markdown-prose">
           <span className="turn-connecting" style={{ color: 'var(--text-secondary)' }}>
             [Reasoning complete — no final response text generated]

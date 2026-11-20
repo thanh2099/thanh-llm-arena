@@ -19,7 +19,33 @@ export function saveThreads(threads: ChatThread[]): void {
   try {
     localStorage.setItem(THREADS_KEY, JSON.stringify(threads));
   } catch {
-    // Quota guard
+    // Quota guard: retry by keeping generatedImages only in the most recent thread
+    try {
+      const trimmed = threads.map((t, idx) =>
+        idx === 0
+          ? t
+          : {
+              ...t,
+              messages: t.messages.map((m) =>
+                m.generatedImages ? { ...m, generatedImages: undefined } : m
+              ),
+            }
+      );
+      localStorage.setItem(THREADS_KEY, JSON.stringify(trimmed));
+    } catch {
+      // Final fallback: strip all generatedImages from persisted storage
+      try {
+        const textOnly = threads.map((t) => ({
+          ...t,
+          messages: t.messages.map((m) =>
+            m.generatedImages ? { ...m, generatedImages: undefined } : m
+          ),
+        }));
+        localStorage.setItem(THREADS_KEY, JSON.stringify(textOnly));
+      } catch {
+        // Ignore if storage is completely unavailable
+      }
+    }
   }
 }
 

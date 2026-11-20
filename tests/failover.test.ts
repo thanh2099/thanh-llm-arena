@@ -110,7 +110,7 @@ describe('Automatic Provider Failover', () => {
       return new Response(sseBody, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
     });
 
-    const deltas: Array<{ type: string; delta: string }> = [];
+    const deltas: Array<{ type: string; delta?: string; dataUrl?: string }> = [];
     await invokeProviderStream(
       {
         provider: 'opencode-go',

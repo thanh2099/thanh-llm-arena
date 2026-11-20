@@ -203,6 +203,15 @@ export const App: React.FC = () => {
                   if (evt.type === 'text') {
                     return { ...m, content: m.content + evt.delta };
                   }
+                  if (evt.type === 'image') {
+                    return {
+                      ...m,
+                      generatedImages: [
+                        ...(m.generatedImages ?? []),
+                        { dataUrl: evt.dataUrl, alt: evt.alt },
+                      ],
+                    };
+                  }
                   if (evt.type === 'done') {
                     return { ...m, latencyMs: evt.latencyMs };
                   }

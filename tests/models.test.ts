@@ -14,6 +14,7 @@ describe('Model Catalog & Smart Router', () => {
       'qwen3.8-flash',
       'gemini-4-hydrogen',
       'kimi-k3',
+      'gemini-image',
     ]);
   });
 
@@ -60,5 +61,28 @@ describe('Model Catalog & Smart Router', () => {
     expect(route.resolvedModelId).toBe('gemini-4-hydrogen');
     expect(route.primary.provider).toBe('openrouter');
     expect(route.primary.targetModel).toBe('google/gemini-4-hydrogen');
+  });
+
+  it('auto-routes image generation prompts to gemini-image', () => {
+    const route = resolveModelRoute(
+      'auto',
+      'Please generate an image of banner with logo "Thanh\'S LLM Arena"',
+      false,
+      'auto'
+    );
+    expect(route.resolvedModelId).toBe('gemini-image');
+    expect(route.primary.protocol).toBe('openrouter-image');
+    expect(route.primary.provider).toBe('openrouter');
+  });
+
+  it('upgrades text-only model to gemini-image when user asks to generate an image', () => {
+    const route = resolveModelRoute(
+      'glm-5.3-flash',
+      'Please generate an image of banner with logo "Thanh\'S LLM Arena"',
+      false,
+      'auto'
+    );
+    expect(route.resolvedModelId).toBe('gemini-image');
+    expect(route.primary.protocol).toBe('openrouter-image');
   });
 });

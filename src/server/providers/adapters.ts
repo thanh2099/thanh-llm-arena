@@ -67,6 +67,113 @@ export async function invokeProviderStream(
   onDelta: (delta: ParsedDelta) => void,
   signal?: AbortSignal
 ): Promise<void> {
+  if (spec.protocol === 'openrouter-image') {
+    const oaMessages = messages.map((m) => {
+      const images = (m.attachments ?? [])
+        .map(parseImageAttachment)
+        .filter((img): img is ParsedImageAttachment => img !== null);
+      const textBody = buildContentWithTextAttachments(m);
+      if (images.length > 0 && m.role === 'user') {
+        return {
+          role: m.role,
+          content: [
+            ...images.map((img) => ({ type: 'image_url', image_url: { url: img.dataUrl } })),
+            { type: 'text', text: textBody },
+          ],
+        };
+      }
+      return { role: m.role, content: textBody };
+    });
+
+    const res = await fetch(spec.endpointUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${keys.openrouter}`,
+        'HTTP-Referer': 'http://localhost:5173',
+        'X-Title': 'ThanhLLM Arena',
+      },
+      body: JSON.stringify({
+        model: spec.targetModel,
+        modalities: ['image', 'text'],
+        stream: false,
+        messages: oaMessages,
+      }),
+      signal,
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errBody.slice(0, 200)}`);
+    }
+
+    const json = (await res.json()) as {
+      choices?: Array<{
+        message?: {
+          content?: string | Array<{ type?: string; text?: string; image_url?: { url?: string } }>;
+          reasoning?: string;
+          reasoning_details?: Array<{ type?: string; text?: string }>;
+          images?: Array<{ type?: string; image_url?: { url?: string }; url?: string }>;
+        };
+      }>;
+    };
+
+    const msg = json.choices?.[0]?.message;
+    if (!msg) {
+      throw new Error('Image provider returned empty response');
+    }
+
+    let emittedCount = 0;
+
+    let reasoning = msg.reasoning;
+    if ((typeof reasoning !== 'string' || !reasoning) && Array.isArray(msg.reasoning_details)) {
+      reasoning = msg.reasoning_details
+        .filter((r) => r?.type === 'reasoning.text' && typeof r.text === 'string')
+        .map((r) => r.text)
+        .join('');
+    }
+    if (typeof reasoning === 'string' && reasoning.trim().length > 0) {
+      onDelta({ type: 'reasoning', delta: reasoning });
+      emittedCount++;
+    }
+
+    const seenUrls = new Set<string>();
+    if (Array.isArray(msg.images)) {
+      for (const img of msg.images) {
+        const url = img?.image_url?.url || img?.url;
+        if (typeof url === 'string' && url.length > 0 && !seenUrls.has(url)) {
+          seenUrls.add(url);
+          onDelta({ type: 'image', dataUrl: url, alt: 'Generated image' });
+          emittedCount++;
+        }
+      }
+    }
+
+    if (typeof msg.content === 'string' && msg.content.trim().length > 0) {
+      onDelta({ type: 'text', delta: msg.content });
+      emittedCount++;
+    } else if (Array.isArray(msg.content)) {
+      for (const part of msg.content) {
+        if (part?.type === 'text' && typeof part.text === 'string' && part.text.trim().length > 0) {
+          onDelta({ type: 'text', delta: part.text });
+          emittedCount++;
+        } else if (part?.type === 'image_url' && typeof part.image_url?.url === 'string') {
+          const url = part.image_url.url;
+          if (url && !seenUrls.has(url)) {
+            seenUrls.add(url);
+            onDelta({ type: 'image', dataUrl: url, alt: 'Generated image' });
+            emittedCount++;
+          }
+        }
+      }
+    }
+
+    if (emittedCount === 0) {
+      throw new Error('Image provider returned no image or text');
+    }
+    return;
+  }
+
   if (spec.protocol === 'gemini') {
     const url = `${spec.endpointUrl}?alt=sse&key=${encodeURIComponent(keys.gemini)}`;
     const contents = messages.map((m) => {

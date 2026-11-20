@@ -213,10 +213,24 @@ function renderMessageCardHtml(msg: ChatMessage): string {
       `
       : '';
 
+  const generatedImagesHtml =
+    msg.generatedImages && msg.generatedImages.length > 0
+      ? `<div class="turn-attachments" style="margin-bottom:10px">${msg.generatedImages
+          .map(
+            (img, idx) =>
+              `<img src="${escapeHtml(img.dataUrl)}" alt="${escapeHtml(
+                img.alt || `Generated image ${idx + 1}`
+              )}" style="max-width:100%;max-height:540px;border:1px solid var(--border-subtle);border-radius:6px;display:block;" />`
+          )
+          .join('')}</div>`
+      : '';
+
   const renderedProse = msg.error
     ? `<div class="error-box">[STREAM ERROR] ${escapeHtml(msg.error)}</div>`
     : msg.content
-    ? `<div class="markdown-prose">${exportMarked.parse(msg.content, { async: false }) as string}</div>`
+    ? `${generatedImagesHtml}<div class="markdown-prose">${exportMarked.parse(msg.content, { async: false }) as string}</div>`
+    : generatedImagesHtml
+    ? generatedImagesHtml
     : `<div class="meta-dim">[No response text generated]</div>`;
 
   return `

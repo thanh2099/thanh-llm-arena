@@ -7,11 +7,17 @@ export type ModelId =
   | 'gemini-3.8-flash'
   | 'qwen3.8-flash'
   | 'gemini-4-hydrogen'
-  | 'kimi-k3';
+  | 'kimi-k3'
+  | 'gemini-image';
 
 export type ProviderId = 'opencode-go' | 'gemini' | 'openrouter';
 export type ProviderOverride = 'auto' | ProviderId;
-export type ProtocolFormat = 'openai' | 'anthropic' | 'gemini';
+export type ProtocolFormat = 'openai' | 'anthropic' | 'gemini' | 'openrouter-image';
+
+export interface GeneratedImage {
+  dataUrl: string;
+  alt?: string;
+}
 
 export interface Attachment {
   id: string;
@@ -35,6 +41,7 @@ export interface ChatMessage {
   content: string;
   reasoning?: string;
   attachments?: Attachment[];
+  generatedImages?: GeneratedImage[];
   modelId?: ModelId;
   resolvedModelName?: string;
   providerUsed?: ProviderId;
@@ -74,5 +81,6 @@ export type SSEEvent =
   | { type: 'failover'; from: ProviderId; to: ProviderId; reason: string }
   | { type: 'reasoning'; delta: string }
   | { type: 'text'; delta: string }
+  | { type: 'image'; dataUrl: string; alt?: string }
   | { type: 'done'; latencyMs: number }
   | { type: 'error'; message: string; provider?: ProviderId };

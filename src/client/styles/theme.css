@@ -1540,3 +1540,55 @@ button {
   }
 }
 
+/* Generated Images Output */
+.generated-images-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 8px;
+}
+
+.generated-image-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-canvas);
+  overflow: hidden;
+  max-width: 760px;
+}
+
+.generated-image-preview {
+  display: block;
+  width: 100%;
+  max-height: 540px;
+  object-fit: contain;
+  background: #050507;
+}
+
+.generated-image-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.generated-image-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-secondary);
+}
+
+.generated-image-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.generated-image-actions a.turn-action-btn {
+  text-decoration: none;
+}
+
+

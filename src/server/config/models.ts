@@ -14,6 +14,7 @@ export interface ModelCatalogEntry {
   description: string;
   supportsVision: boolean;
   supportsReasoning: boolean;
+  supportsImageGeneration?: boolean;
   primary: ProviderEndpointSpec;
   fallbacks: ProviderEndpointSpec[];
 }
@@ -259,6 +260,35 @@ export const MODEL_CATALOG: ModelCatalogEntry[] = [
       },
     ],
   },
+  {
+    id: 'gemini-image',
+    name: 'Gemini 3.1 Image Gen',
+    badge: 'IMAGE GEN',
+    description: 'Generate high-resolution banners, logos, and artwork via Gemini Image on OpenRouter',
+    supportsVision: true,
+    supportsReasoning: true,
+    supportsImageGeneration: true,
+    primary: {
+      provider: 'openrouter',
+      protocol: 'openrouter-image',
+      targetModel: 'google/gemini-3.1-flash-lite-image',
+      endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    },
+    fallbacks: [
+      {
+        provider: 'openrouter',
+        protocol: 'openrouter-image',
+        targetModel: 'google/gemini-3.1-flash-image',
+        endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+      {
+        provider: 'openrouter',
+        protocol: 'openrouter-image',
+        targetModel: 'google/gemini-2.5-flash-image',
+        endpointUrl: 'https://openrouter.ai/api/v1/chat/completions',
+      },
+    ],
+  },
 ];
 
 export interface ResolvedModelRoute {
@@ -268,7 +298,21 @@ export interface ResolvedModelRoute {
   fallbacks: ProviderEndpointSpec[];
 }
 
+const IMAGE_GEN_ACTION_REGEX =
+  /\b(generate|create|draw|make|design|render|paint|produce|illustrate|sketch)\b[\s\S]{0,40}\b(an?\s+)?(image|picture|photo|photograph|logo|banner|icon|artwork|illustration|poster|avatar|wallpaper|graphic|thumbnail|cover)\b/i;
+const IMAGE_OF_REGEX = /\b(image|picture|photo|artwork|illustration|banner|logo)\s+(of|with|for|featuring|showing)\b/i;
+const CODE_INTENT_REGEX =
+  /\b(html|css|svg|react|code|script|python|javascript|typescript|landing page|component|website|dashboard|app|function|powershell|bash|sql|algorithm)\b/i;
+
+export function isImageGenerationPrompt(prompt: string): boolean {
+  const trimmed = prompt.trim();
+  if (!trimmed) return false;
+  if (CODE_INTENT_REGEX.test(trimmed)) return false;
+  return IMAGE_GEN_ACTION_REGEX.test(trimmed) || IMAGE_OF_REGEX.test(trimmed);
+}
+
 export function classifyAutoModel(prompt: string, hasImageAttachment: boolean): Exclude<ModelId, 'auto'> {
+  if (isImageGenerationPrompt(prompt)) return 'gemini-image';
   if (hasImageAttachment) return 'gemini-3.8-flash';
   const lower = prompt.toLowerCase();
   if (
@@ -294,7 +338,10 @@ export function resolveModelRoute(
     modelId === 'auto' ? classifyAutoModel(promptText, hasImageAttachment) : modelId;
 
   let entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? MODEL_CATALOG[5];
-  if (hasImageAttachment && !entry.supportsVision) {
+  if (isImageGenerationPrompt(promptText) && !entry.supportsImageGeneration) {
+    targetId = 'gemini-image';
+    entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? entry;
+  } else if (hasImageAttachment && !entry.supportsVision) {
     targetId = 'gemini-3.8-flash';
     entry = MODEL_CATALOG.find((m) => m.id === targetId) ?? MODEL_CATALOG[5];
   }
